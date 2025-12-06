@@ -5,6 +5,8 @@ const path = require("path")
 const cors = require('cors');
 const connectDB = require('./config/db');
 const bodyParser = require("body-parser");
+const cookieParser = require('cookie-parser');
+const authRoutes = require('./routers/authRoutes');
 require("dotenv").config()
 
 
@@ -21,12 +23,17 @@ app.use(cors(corsOptions));
 connectDB()
 
 app.use(express.json())
+app.use(cookieParser());
 app.use(bodyParser.json())
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use(express.json())
 app.use(bodyParser.json())
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// Mount routers
+app.use('/api/auth', authRoutes);
+
 console.log("Middleware for JSON, body-parser, and static file serving has been set up.");
 
 const PORT = process.env.PORT || 5050;
