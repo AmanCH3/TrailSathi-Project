@@ -33,6 +33,15 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Mount routers
 app.use('/api/auth', authRoutes);
+app.use('/api/trails', require('./routers/trailRoutes'));
+app.use('/api/reviews', require('./routers/reviewRoutes'));
+
+app.all(/(.*)/, (req, res, next) => {
+  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
+});
+
+app.use(require('./controllers/errorController'));
+const AppError = require('./utils/appError');
 
 console.log("Middleware for JSON, body-parser, and static file serving has been set up.");
 

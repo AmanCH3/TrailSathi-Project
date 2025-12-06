@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "seed": "node database/seed.js"
   },
   "keywords": [],
   "author": "",
@@ -19,6 +20,8 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.20.1",
+    "multer": "^2.0.2",
+    "slugify": "^1.6.6",
     "validator": "^13.15.23"
   },
   "devDependencies": {
