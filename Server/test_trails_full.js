@@ -21,6 +21,7 @@ const regularUser = {
 let adminToken;
 let userToken;
 let trailId;
+let hikeId;
 
 const loginOrSignup = async (user) => {
   try {
@@ -33,7 +34,7 @@ const loginOrSignup = async (user) => {
     if (err.response && err.response.status === 401) {
         // Try signup
         try {
-            const res = await axios.post(`${BASE_URL}/auth/signup`, user);
+            const res = await axios.post(`${BASE_URL}/auth/register`, user);
             return res.data.token;
         } catch (signupErr) {
              console.error('Signup failed:', signupErr.response ? signupErr.response.data : signupErr.message);
@@ -72,6 +73,54 @@ const runTests = async () => {
     });
     trailId = trailRes.data.data.trail._id;
     console.log('Trail created:', trailRes.data.data.trail.name);
+
+    console.log('\n--- Creating Scheduled Hike (Admin) ---');
+    const hikeData = {
+        trail: trailId,
+        date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+        maxParticipants: 10,
+        price: 50
+    };
+    const hikeRes = await axios.post(`${BASE_URL}/hikes`, hikeData, {
+        headers: { Authorization: `Bearer ${adminToken}` }
+    });
+    hikeId = hikeRes.data.data.hike._id;
+    console.log('Hike created for date:', hikeRes.data.data.hike.date);
+
+
+    console.log('\n--- Joining Hike (User) ---');
+    const joinRes = await axios.post(`${BASE_URL}/hikes/${hikeId}/join`, {}, {
+        headers: { Authorization: `Bearer ${userToken}` }
+    });
+    console.log(joinRes.data.message);
+
+    console.log('\n--- Verifying Upcoming Hikes (User) ---');
+    const upcomingRes = await axios.get(`${BASE_URL}/users/my-upcoming-hikes`, {
+        headers: { Authorization: `Bearer ${userToken}` }
+    });
+    const myHikes = upcomingRes.data.data.hikes;
+    if (myHikes.find(h => h._id === hikeId)) {
+        console.log('SUCCESS: Joined hike found in upcoming hikes.');
+    } else {
+        console.log('FAILURE: Joined hike NOT found in upcoming hikes.');
+    }
+
+    console.log('\n--- Marking Trail as Completed (User) ---');
+    const completeRes = await axios.post(`${BASE_URL}/users/completed-trails`, { trailId }, {
+        headers: { Authorization: `Bearer ${userToken}` }
+    });
+    console.log(completeRes.data.message);
+
+    console.log('\n--- Verifying Completed Trails (User) ---');
+    const completedRes = await axios.get(`${BASE_URL}/users/completed-trails`, {
+        headers: { Authorization: `Bearer ${userToken}` }
+    });
+    const myCompleted = completedRes.data.data.manuallyCompletedTrails;
+    if (myCompleted.find(t => t.trail._id === trailId)) {
+        console.log('SUCCESS: Trail found in completed trails list.');
+    } else {
+        console.log('FAILURE: Trail NOT found in completed trails list.');
+    }
 
     console.log('\n--- Creating Review (User) ---');
     const reviewData = {

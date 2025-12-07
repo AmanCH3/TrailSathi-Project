@@ -3,17 +3,11 @@ const dotenv = require('dotenv');
 const User = require('./../models/user.model');
 const Trail = require('./../models/trail.model');
 const Review = require('./../models/review.model');
+const Achievement = require('./../models/achievement.model');
 
 dotenv.config({ path: './.env' });
 
 const DB = process.env.MONGODB_URI;
-
-mongoose
-  .connect(DB, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-  })
-  .then(() => console.log('DB connection successful!'));
 
 const users = [
   {
@@ -39,6 +33,45 @@ const users = [
     passwordConfirm: 'password123',
     role: 'user',
     phone: '1122334455'
+  }
+];
+
+const achievements = [
+  {
+    name: 'First Hike',
+    code: 'FIRST_HIKE',
+    description: 'Completed your first hike!',
+    icon: '🥾'
+  },
+  {
+    name: 'High Five',
+    code: 'FIVE_HIKES',
+    description: 'Completed 5 hikes.',
+    icon: '🖐️'
+  },
+  {
+    name: 'Ten Hikes',
+    code: 'TEN_HIKES',
+    description: 'Completed 10 hikes.',
+    icon: '🔟'
+  },
+  {
+    name: 'Marathoner',
+    code: 'DISTANCE_50KM',
+    description: 'Hiked a total of 50km.',
+    icon: '🏃'
+  },
+  {
+    name: 'Century Club',
+    code: 'DISTANCE_100KM',
+    description: 'Hiked a total of 100km.',
+    icon: '💯'
+  },
+  {
+    name: 'Sky High',
+    code: 'ELEVATION_1000M',
+    description: 'Gained 1000m in elevation.',
+    icon: '🏔️'
   }
 ];
 
@@ -93,13 +126,18 @@ const importData = async () => {
     await Review.deleteMany();
     await Trail.deleteMany();
     await User.deleteMany();
+    await Achievement.deleteMany();
     console.log('Data destroyed!');
 
     // 2. Create Users
     const createdUsers = await User.create(users);
     console.log('Users loaded!');
 
-    // 3. Create Trails (assigning a random admin as createdBy if needed, or just leaving it null for now)
+    // 3. Create Achievements
+    await Achievement.create(achievements);
+    console.log('Achievements loaded!');
+
+    // 4. Create Trails
     const trailsWithUser = trails.map(trail => ({
         ...trail,
         createdBy: createdUsers[0]._id // Admin
@@ -107,7 +145,7 @@ const importData = async () => {
     const createdTrails = await Trail.create(trailsWithUser);
     console.log('Trails loaded!');
 
-    // 4. Create Reviews
+    // 5. Create Reviews
     const reviews = [
       {
         review: 'Absolutely stunning views! The climb was tough but worth it.',
@@ -144,6 +182,7 @@ const deleteData = async () => {
     await Review.deleteMany();
     await Trail.deleteMany();
     await User.deleteMany();
+    await Achievement.deleteMany();
     console.log('Data successfully deleted!');
     process.exit();
   } catch (err) {
@@ -152,11 +191,24 @@ const deleteData = async () => {
   }
 };
 
-if (process.argv[2] === '--import') {
-  importData();
-} else if (process.argv[2] === '--delete') {
-  deleteData();
-} else {
-    // Default to import if no arg
-    importData();
-}
+// Connect to DB then run script
+mongoose
+  .connect(DB, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  })
+  .then(() => {
+    console.log('DB connection successful!');
+    
+    if (process.argv[2] === '--import') {
+      importData();
+    } else if (process.argv[2] === '--delete') {
+      deleteData();
+    } else {
+        importData();
+    }
+  })
+  .catch(err => {
+      console.error('DB Connection Error:', err);
+      process.exit(1);
+  });

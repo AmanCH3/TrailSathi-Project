@@ -10,13 +10,14 @@ const authRoutes = require('./routers/authRoutes');
 require("dotenv").config()
 
 
-
 const app = express();
 
 const corsOptions = {
   origin: "http://localhost:5173", 
   credentials: true,               
 };
+
+
 
 app.use(cors(corsOptions));
 
@@ -31,10 +32,18 @@ app.use(express.json())
 app.use(bodyParser.json())
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+
+app.use(express.urlencoded({ extended: true }));
+
 // Mount routers
 app.use('/api/auth', authRoutes);
 app.use('/api/trails', require('./routers/trailRoutes'));
 app.use('/api/reviews', require('./routers/reviewRoutes'));
+app.use('/api/users', require('./routers/userRoutes'));
+app.use('/api/solo-hikes', require('./routers/soloHikeRoutes'));
+app.use('/api/notifications' , require('./routers/notificationRoutes'));
+app.use('/api/achievements' , require('./routers/achievementRoutes'));
+
 
 app.all(/(.*)/, (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
