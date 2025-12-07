@@ -1,6 +1,7 @@
 const User = require('../models/user.model');
 const jwt = require('jsonwebtoken');
 const sendEmail = require('../utils/email');
+const { resetPasswordOtpTemplate } = require('../utils/emailTemplates');
 
 
 
@@ -105,37 +106,46 @@ exports.forgotPassword = async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     console.log('Generated OTP:', otp, 'for user:', user.email);
 
-    // Save OTP to database
     user.passwordResetOTP = otp;
     user.passwordResetExpires = Date.now() + 10 * 60 * 1000;
     await user.save({ validateBeforeSave: false });
 
-    const message = `Your password reset OTP is ${otp}. It is valid for 10 minutes.`;
+    const plainTextMessage = `Your TrailSathi password reset OTP is ${otp}. It is valid for 10 minutes. If you did not request this, you can ignore this email.`;
+
+    const htmlMessage = resetPasswordOtpTemplate({
+      name: user.name || 'TrailSathi Explorer',
+      otp,
+    });
 
     try {
-        await sendEmail({
-            email: user.email,
-            subject: 'Password Reset OTP',
-            message
-        });
+      await sendEmail({
+        email: user.email,
+        subject: 'TrailSathi – Password Reset OTP',
+        message: plainTextMessage,
+        html: htmlMessage,   // 👈 pass html to your mailer
+      });
 
-        res.status(200).json({
-            success: true,
-            message: 'OTP sent to email!'
-        });
+      return res.status(200).json({
+        success: true,
+        message: 'OTP sent to email!',
+      });
     } catch (err) {
-        console.error('Send Email Error:', err);
-        user.passwordResetOTP = undefined;
-        user.passwordResetExpires = undefined;
-        await user.save({ validateBeforeSave: false });
+      console.error('Send Email Error:', err);
+      user.passwordResetOTP = undefined;
+      user.passwordResetExpires = undefined;
+      await user.save({ validateBeforeSave: false });
 
-        return res.status(500).json({ success: false, message: 'Email could not be sent', error: err.message });
+      return res.status(500).json({
+        success: false,
+        message: 'Email could not be sent',
+        error: err.message,
+      });
     }
   } catch (err) {
     console.error('❌ forgotPassword error:', err);
-    res.status(500).json({ success: false, message: err.message });
+    return res.status(500).json({ success: false, message: err.message });
   }
-};
+}
 // @desc    Reset Password
 // @route   PUT /api/auth/reset-password
 // @access  Public

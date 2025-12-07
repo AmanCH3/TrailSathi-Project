@@ -6,7 +6,7 @@ const nodemailer = require('nodemailer');
 
 
 const sendEmail = async (options) => {
-  console.log('➡️ sendEmail called with:', options);
+  // console.log('➡️ sendEmail called with:', options);
 
   const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -21,6 +21,7 @@ const sendEmail = async (options) => {
     to: options.email,
     subject: options.subject,
     text: options.message,
+    html: options.html || null, 
   };
 
   try {
