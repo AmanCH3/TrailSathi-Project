@@ -1,27 +1,37 @@
+// utils/email.js
+require('dotenv').config(); // safe here too, just to be sure
+
 const nodemailer = require('nodemailer');
 
-const sendEmail = async options => {
-  // 1) Create a transporter
+
+
+const sendEmail = async (options) => {
+  console.log('➡️ sendEmail called with:', options);
+
   const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST || 'smtp.ethereal.email',
-    port: process.env.EMAIL_PORT || 587,
+    service: 'gmail',
     auth: {
-      user: process.env.EMAIL_USERNAME,
-      pass: process.env.EMAIL_PASSWORD
-    }
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
   });
 
-  // 2) Define the email options
   const mailOptions = {
-    from: 'TrailSathi <hello@trailsathi.com>',
+    from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
     to: options.email,
     subject: options.subject,
     text: options.message,
-    // html:
   };
 
-  // 3) Actually send the email
-  await transporter.sendMail(mailOptions);
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('✅ Email sent OK:', info.messageId);
+    return info;
+  } catch (err) {
+    console.error('❌ Error in sendEmail:', err.message);
+    if (err.response) console.error('SMTP response:', err.response);
+    throw err;
+  }
 };
 
 module.exports = sendEmail;

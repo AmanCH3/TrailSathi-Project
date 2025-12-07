@@ -106,7 +106,9 @@ const UserSchema = new mongoose.Schema(
                 type: Date,
                 default: Date.now
             },
-        }]
+        }],
+        passwordResetOTP: String,
+        passwordResetExpires: Date
     },
     {
         timestamps: true,
