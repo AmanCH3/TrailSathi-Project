@@ -32,6 +32,7 @@ exports.createSoloHike = catchAsync(async (req, res, next) => {
 });
 
 
+//  This is gonna show in the profile dashboard of the users
 exports.getMySoloHikes = catchAsync(async (req, res, next) => {
   const filter = { user: req.user.id };
   if (req.query.status) {

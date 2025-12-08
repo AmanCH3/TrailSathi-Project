@@ -4,10 +4,17 @@ const User = require('./../models/user.model');
 const Trail = require('./../models/trail.model');
 const Review = require('./../models/review.model');
 const Achievement = require('./../models/achievement.model');
+const Group = require('./../models/Group');
+const GroupMembership = require('./../models/GroupMembership');
+const Post = require('./../models/Post');
+const Event = require('./../models/Event');
+const EventAttendance = require('./../models/EventAttendance');
+const Conversation = require('./../models/Conversation');
+const Message = require('./../models/Message');
 
 dotenv.config({ path: './.env' });
 
-const DB = process.env.MONGODB_URI;
+const DB = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/trailsathi';
 
 const users = [
   {
@@ -16,7 +23,8 @@ const users = [
     password: 'password123',
     passwordConfirm: 'password123',
     role: 'admin',
-    phone: '1234567890'
+    phone: '1234567890',
+    bio: 'I love managing trails.'
   },
   {
     name: 'John Doe',
@@ -24,7 +32,8 @@ const users = [
     password: 'password123',
     passwordConfirm: 'password123',
     role: 'user',
-    phone: '0987654321'
+    phone: '0987654321',
+    bio: 'Avid hiker and photographer.'
   },
   {
     name: 'Jane Smith',
@@ -32,7 +41,8 @@ const users = [
     password: 'password123',
     passwordConfirm: 'password123',
     role: 'user',
-    phone: '1122334455'
+    phone: '1122334455',
+    bio: 'Weekend explorer.'
   }
 ];
 
@@ -127,6 +137,14 @@ const importData = async () => {
     await Trail.deleteMany();
     await User.deleteMany();
     await Achievement.deleteMany();
+    // Clear Community Data
+    await Group.deleteMany();
+    await GroupMembership.deleteMany();
+    await Post.deleteMany();
+    await Event.deleteMany();
+    await EventAttendance.deleteMany();
+    await Conversation.deleteMany();
+    await Message.deleteMany();
     console.log('Data destroyed!');
 
     // 2. Create Users
@@ -169,6 +187,69 @@ const importData = async () => {
     await Review.create(reviews);
     console.log('Reviews loaded!');
 
+    // 6. Create Community Data
+    // Group
+    const group = await Group.create({
+        name: 'Kathmandu Hikers',
+        description: 'Community for hiking lovers in KTM valley.',
+        owner: createdUsers[0]._id, // Admin
+        admins: [createdUsers[0]._id],
+        memberCount: 2,
+        postCount: 1,
+        upcomingEventCount: 1
+    });
+    console.log('Group loaded!');
+
+    // Memberships
+    await GroupMembership.create([
+        { group: group._id, user: createdUsers[0]._id, role: 'owner', status: 'active' },
+        { group: group._id, user: createdUsers[1]._id, role: 'member', status: 'active' }
+    ]);
+    console.log('Memberships loaded!');
+
+    // Posts
+    await Post.create({
+        group: group._id,
+        author: createdUsers[1]._id,
+        content: 'Anyone planning for Shivapuri this Saturday?',
+        trailName: 'Shivapuri Peak'
+    });
+    console.log('Posts loaded!');
+
+    // Events
+    const event = await Event.create({
+        group: group._id,
+        host: createdUsers[0]._id,
+        title: 'Nagarkot Sunrise Hike',
+        description: 'Meet at 4 AM for sunrise.',
+        startDateTime: new Date(Date.now() + 86400000 * 3), // 3 days later
+        difficulty: 'Easy',
+        meetLocation: 'Koteshwor'
+    });
+    console.log('Events loaded!');
+
+    // Attendance
+    await EventAttendance.create({
+        event: event._id,
+        user: createdUsers[1]._id,
+        status: 'going'
+    });
+    // Update event participant count
+    await Event.findByIdAndUpdate(event._id, { $inc: { participantsCount: 1 } });
+    console.log('Event Attendance loaded!');
+
+    // Messaging
+    const conversation = await Conversation.create({
+        participants: [createdUsers[1]._id, createdUsers[2]._id]
+    });
+    
+    await Message.create({
+        conversation: conversation._id,
+        sender: createdUsers[1]._id,
+        text: 'Hey Jane, want to join the Nagarkot hike?'
+    });
+    console.log('Messages loaded!');
+
     console.log('Data successfully loaded!');
     process.exit();
   } catch (err) {
@@ -183,6 +264,14 @@ const deleteData = async () => {
     await Trail.deleteMany();
     await User.deleteMany();
     await Achievement.deleteMany();
+    // Clear Community Data
+    await Group.deleteMany();
+    await GroupMembership.deleteMany();
+    await Post.deleteMany();
+    await Event.deleteMany();
+    await EventAttendance.deleteMany();
+    await Conversation.deleteMany();
+    await Message.deleteMany();
     console.log('Data successfully deleted!');
     process.exit();
   } catch (err) {
@@ -193,10 +282,7 @@ const deleteData = async () => {
 
 // Connect to DB then run script
 mongoose
-  .connect(DB, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-  })
+  .connect(DB)
   .then(() => {
     console.log('DB connection successful!');
     
