@@ -244,11 +244,12 @@
 
 import { ArrowRight, Star, ChevronRight } from "lucide-react";
 import { useAdminTrail } from "../../hooks/admin/useAdminTrail";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ViewTrailDialog } from "../admin/trail_management/ViewTrailDailog";
 import { useState } from "react";
 
 const FeaturedTrails = () => {
+  const navigate = useNavigate();
   const [selectedTrail, setSelectedTrail] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -314,7 +315,8 @@ const FeaturedTrails = () => {
                     <div 
                         key={trail._id} 
                         className="group flex flex-col gap-3 cursor-pointer"
-                        onClick={() => handleViewTrail(trail)}
+                        // Navigate to detail page
+                        onClick={() => navigate(`/trails/${trail._id}`)}
                     >
                         {/* Image Card */}
                         <div className="relative overflow-hidden rounded-2xl aspect-[4/3] w-full bg-gray-100">

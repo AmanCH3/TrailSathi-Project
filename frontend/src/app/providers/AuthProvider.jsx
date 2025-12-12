@@ -30,7 +30,7 @@ export const AuthContextProvider = ({ children }) => {
         }
 
         try {
-            const response = await axios.get(`${ENV.API_URL}/user/me`, {
+            const response = await axios.get(`${ENV.API_URL}/users/me`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
@@ -39,8 +39,10 @@ export const AuthContextProvider = ({ children }) => {
                 login(updatedUser, token);
             }
         } catch (error) {
-            console.error("Session expired or invalid, logging out:", error);
-            logout();
+            console.error("Session refresh error:", error);
+            if (error.response?.status === 401) {
+                 logout();
+            }
         } finally {
             setLoading(false);
         }

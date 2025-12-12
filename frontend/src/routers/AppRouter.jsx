@@ -4,6 +4,7 @@ import LoginPage from "../pages/LoginPage";
 import LandingPage from "../pages/LandingPage";
 import SignUpPage from "../pages/SignUpPage";
 import TrailsPage from "../pages/TrailsPage";
+import TrailDetailsPage from "../pages/TrailDetailsPage";
 import ForgotPasswordPage from "../pages/ForgotPasswordPage";
 import MainLayout from "../layouts/MainLayout";
 import DashboardPage from "../components/admin/DashBoardPage";
@@ -46,6 +47,7 @@ export default function AppRouter() {
         <Route path="/" element={<MainLayout />}>
           <Route index element={<LandingPage />} />
           <Route path="trails" element={<TrailsPage />} />
+          <Route path="trails/:id" element={<TrailDetailsPage />} />
           <Route path="forgotpassword" element={<ForgotPasswordPage />} />
           <Route path="signup" element={<SignUpPage />} />
           <Route path="login" element={<LoginPage />} />
