@@ -2,6 +2,9 @@
 // import axios from "../api"
 
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5050/api";
+
+
 // export const getAllTrailApi = (params) => {
 //   return axios.get("trail/", { params });
 // };
@@ -16,8 +19,24 @@
 // export const getOneApiTrailApi = (id) => axios.get('/trail/' + id) 
 
 
-// export const updateOneTrailApi = (id, data) => {
-//   return axios.put("/trail/" + id, data);
+// Gallery API
+export const uploadGalleryImagesApi = (trailId, formData) => {
+    const token = localStorage.getItem('token');
+    const url = `${API_URL}/trails/${trailId}/gallery-images`;
+    console.log('Sending upload request to:', url);
+    console.log('Trail ID:', trailId);
+    
+    return axios.post(url, formData, {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+};
+
+export const getGalleryImagesApi = (trailId) => {
+    return axios.get(`${API_URL}/trails/${trailId}/gallery-images`);
+};
 // };
 
 // export const deleteOneTrailApi = (id) => {

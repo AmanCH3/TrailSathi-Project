@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useTrail } from '../hooks/useTrail';
 import { 
   Star, 
@@ -19,9 +19,11 @@ import {
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { CreateReviewModal } from '../components/reviews/CreateReviewModal';
+import { UploadPhotosModal } from '../components/reviews/UploadPhotosModal';
 
 export default function TrailDetailsPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { data: trail, isLoading, isError } = useTrail(id);
   const [activeTab, setActiveTab] = useState('photos'); // 'photos', 'upload'
 
@@ -105,12 +107,17 @@ export default function TrailDetailsPage() {
                     <button className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-gray-200 hover:bg-gray-50 transition-colors font-semibold text-sm">
                         <PlayCircle className="w-5 h-5" /> Preview
                     </button>
-                    <button className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-gray-200 hover:bg-gray-50 transition-colors font-semibold text-sm">
+                    <button 
+                        onClick={() => navigate(`/trails/${trail._id}/photos`)}
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-gray-200 hover:bg-gray-50 transition-colors font-semibold text-sm"
+                    >
                         <Images className="w-5 h-5" /> All photos
                     </button>
-                     <button className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-black text-white hover:bg-gray-800 transition-colors font-semibold text-sm shadow-md">
-                        <Upload className="w-4 h-4" /> Upload
-                    </button>
+                     <UploadPhotosModal trailId={trail._id}>
+                        <button className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-black text-white hover:bg-gray-800 transition-colors font-semibold text-sm shadow-md">
+                            <Upload className="w-4 h-4" /> Upload
+                        </button>
+                     </UploadPhotosModal>
                      <button className="ml-auto w-10 h-10 flex items-center justify-center rounded-full border border-gray-200 hover:bg-gray-50 text-gray-600">
                         <Share2 className="w-4 h-4" />
                     </button>
@@ -228,10 +235,11 @@ export default function TrailDetailsPage() {
                   </div>
                 </div>
 
-                {/* Reviews */}
                 <div className="space-y-10 ">
                   {trail.reviews && trail.reviews.length > 0 ? (
-                    trail.reviews.map((review) => (
+                    trail.reviews
+                        .filter(r => !r.review.startsWith('[GALLERY]') && r.review !== 'Just sharing some photos!')
+                        .map((review) => (
                       <div key={review._id} className="border-b border-gray-100 pb-8 mb-8 last:border-0 relative ">
                         
                         {/* Header Row */}

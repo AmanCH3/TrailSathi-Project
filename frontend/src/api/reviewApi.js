@@ -12,3 +12,7 @@ export const createReviewApi = (trailId, data) => {
         },
     });
 };
+
+export const getReviewsApi = (trailId) => {
+    return axios.get(`${API_URL}/trails/${trailId}/reviews`);
+};
