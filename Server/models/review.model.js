@@ -36,7 +36,8 @@ const reviewSchema = new mongoose.Schema(
 );
 
 // Prevent duplicate reviews
-reviewSchema.index({ trail: 1, user: 1 }, { unique: true });
+// Prevent duplicate reviews -- DISABLED to allow multiple photo uploads/reviews
+// reviewSchema.index({ trail: 1, user: 1 }, { unique: true });
 
 reviewSchema.pre(/^find/, function(next) {
   this.populate({

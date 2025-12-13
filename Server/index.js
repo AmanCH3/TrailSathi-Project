@@ -19,7 +19,15 @@ const jwt = require('jsonwebtoken');
 const corsOptions = {
   origin: "http://localhost:5173",
   credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization']
 };
+
+// Request Logger
+app.use((req, res, next) => {
+  console.log(`Incoming: ${req.method} ${req.url}`);
+  next();
+});
+
 
 const io = new Server(server, {
   cors: corsOptions

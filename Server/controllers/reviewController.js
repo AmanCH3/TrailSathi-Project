@@ -27,7 +27,7 @@ const upload = multer({
   fileFilter: multerFilter
 });
 
-exports.uploadReviewImages = upload.array('images', 3);
+exports.uploadReviewImages = upload.array('images', 10);
 
 exports.setTrailUserIds = (req, res, next) => {
   // Allow nested routes

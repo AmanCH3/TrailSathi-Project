@@ -29,6 +29,10 @@ const trailSchema = new mongoose.Schema(
       },
       default: 'Moderate'
     },
+    duration: {
+      type: Number,
+      // required: [true, 'A trail must have a duration'] // Optional for now to avoid breaking existing data
+    },
     length: {
       type: Number,
       required: [true, 'A trail must have a length']
@@ -39,6 +43,19 @@ const trailSchema = new mongoose.Schema(
     },
     tags: [String],
     images: [String],
+    galleryImages: [
+      {
+        url: String,
+        user: {
+          type: mongoose.Schema.ObjectId,
+          ref: 'User'
+        },
+        createdAt: {
+          type: Date,
+          default: Date.now
+        }
+      }
+    ],
     ratingsAverage: {
       type: Number,
       default: 4.5,
