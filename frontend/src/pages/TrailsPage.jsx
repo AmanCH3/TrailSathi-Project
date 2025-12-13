@@ -1,5 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Star } from 'lucide-react';
 import { useAdminTrail } from '../hooks/admin/useAdminTrail';
 import TrailFilterPanel from '../features/trails/TrailFilterPanel';
 import { Button } from '@/components/ui/button';
@@ -10,134 +12,92 @@ const initialFilters = {
   limit: 10,
   search: '',
   maxDistance: 50,
-  maxElevation: 5000,
-  maxDuration: 24,
+  maxElevation: 3000,
+  maxDuration: 12,
   difficulty: 'All',
 };
 
-const TrailCard = ({ trail, onJoinClick }) => {
+const TrailCard = ({ trail, onJoinClick, isJoined }) => {
+  const navigate = useNavigate();
+
   const getFullImageUrl = (path) => {
-    if (!path) return "/placeholder.svg";
-    const apiUrl = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5050';
-    return `${apiUrl}/${path.replace(/\\/g, '/')}`;
+    if (!path) return "https://images.unsplash.com/photo-1551632811-561732d1e306?q=80&w=2070&auto=format&fit=crop";
+    if (path.startsWith('http')) return path; 
+    const baseUrl = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace('/api', '') : 'http://localhost:5050';
+    return `${baseUrl}/${path.replace(/\\/g, '/')}`;
   };
 
-  const imageUrl = getFullImageUrl(trail.images?.[0]);
-
-  const getDifficultyColor = (difficulty) => {
-    switch (difficulty?.toLowerCase()) {
-      case 'easy': return 'bg-green-100 text-green-800 border-green-200';
-      case 'moderate': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'difficult': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  const formatDuration = (duration) => {
-    if (duration?.min && duration?.max) return `${duration.min}-${duration.max}h`;
-    if (duration?.min) return `${duration.min}h+`;
-    if (duration?.max) return `Up to ${duration.max}h`;
-    return 'Duration varies';
-  };
-
-  const renderStars = (rating) => {
-    const stars = [];
-    const fullStars = Math.floor(rating || 0);
-    const hasHalfStar = (rating || 0) % 1 !== 0;
-    for (let i = 0; i < fullStars; i++) {
-      stars.push(<span key={i} className="text-yellow-400">★</span>);
-    }
-    if (hasHalfStar) {
-      stars.push(<span key="half" className="text-yellow-400">☆</span>);
-    }
-    const emptyStars = 5 - Math.ceil(rating || 0);
-    for (let i = 0; i < emptyStars; i++) {
-      stars.push(<span key={`empty-${i}`} className="text-gray-300">★</span>);
-    }
-    return stars;
-  };
-
-  const getSeasonEmoji = (season) => {
-    switch (season?.toLowerCase()) {
-      case 'spring': return '🌸';
-      case 'summer': return '☀️';
-      case 'fall': case 'autumn': return '🍂';
-      case 'winter': return '❄️';
-      default: return '🌿';
-    }
+  const getDuration = (length) => {
+      const hours = length / 3;
+      return `${Math.floor(hours)}-${Math.ceil(hours)} hr`;
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
-      <div className="relative h-48 bg-gradient-to-br from-green-100 to-blue-100">
-        <img
-          src={imageUrl}
-          alt={trail.name}
-          className="w-full h-full object-cover"
-          onError={(e) => { e.target.onerror = null; e.target.src = "/placeholder.svg"; }}
-        />
-        <div className="absolute top-3 left-3">
-          <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${getDifficultyColor(trail.difficult)}`}>
-            {trail.difficult || 'Unknown'}
-          </span>
+    <div 
+        className="group flex flex-col gap-3 cursor-pointer"
+        onClick={() => navigate(`/trails/${trail._id}`)}
+    >
+        {/* Image Card */}
+        <div className="relative overflow-hidden rounded-2xl aspect-[4/3] w-full bg-gray-100">
+              <img 
+                src={getFullImageUrl(trail.images?.[0])} 
+                alt={trail.name} 
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              
+              {/* Planned Badge */}
+              {isJoined && (
+                  <div className="absolute top-3 right-3 bg-blue-600 text-white text-[10px] uppercase font-bold px-2 py-1 rounded shadow-sm z-10">
+                      Planned
+                  </div>
+              )}
         </div>
-      </div>
-      <div className="p-5">
-        <div className="mb-3">
-          <h3 className="font-bold text-xl text-gray-900 mb-1 line-clamp-1">{trail.name}</h3>
-          {trail.location && (
-            <p className="text-gray-600 text-sm flex items-center">
-              <svg className="w-4 h-4 mr-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"/></svg>
-              {trail.location}
+
+        {/* Content */}
+        <div className="space-y-1">
+            {/* Title */}
+            <h3 className="text-xl font-bold text-gray-900 leading-snug truncate">
+                {trail.name}
+            </h3>
+            
+            {/* Subtitle / Location */}
+            <p className="text-sm text-gray-500 font-medium truncate">
+                {trail.location || "Unknown Location"}
             </p>
-          )}
-        </div>
-        {trail.description && (<p className="text-gray-700 text-sm mb-4 line-clamp-2">{trail.description}</p>)}
-        <div className="grid grid-cols-3 gap-4 mb-4 p-3 bg-gray-50 rounded-lg">
-          <div className="text-center">
-            <div className="font-bold text-lg text-blue-600">{trail.distance || 'N/A'}</div>
-            <div className="text-xs text-gray-600 uppercase tracking-wide">Distance (km)</div>
-          </div>
-          <div className="text-center">
-            <div className="font-bold text-lg text-green-600">{trail.elevation || 'N/A'}</div>
-            <div className="text-xs text-gray-600 uppercase tracking-wide">Elevation (m)</div>
-          </div>
-          <div className="text-center">
-            <div className="font-bold text-lg text-purple-600">{formatDuration(trail.duration)}</div>
-            <div className="text-xs text-gray-600 uppercase tracking-wide">Duration</div>
-          </div>
-        </div>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-1">
-            <div className="flex">{renderStars(trail.averageRating)}</div>
-            <span className="text-sm text-gray-600 ml-2">{trail.averageRating?.toFixed(1) || 'No rating'}</span>
-          </div>
-          <span className="text-xs text-gray-500">{trail.numRatings || 0} review{(trail.numRatings || 0) !== 1 ? 's' : ''}</span>
-        </div>
-        {trail.seasons?.length > 0 && (
-          <div className="mb-4">
-            <p className="text-xs text-gray-500 mb-2 uppercase tracking-wide">Best Seasons</p>
-            <div className="flex flex-wrap gap-2">
-              {trail.seasons.map((season, index) => (
-                <span key={index} className="inline-flex items-center bg-green-50 text-green-700 text-xs px-2 py-1 rounded-full border border-green-200">
-                  <span className="mr-1">{getSeasonEmoji(season)}</span>{season}
+            
+            {/* Meta Row: Rating · Difficulty · Length · Duration */}
+            <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium mt-1">
+                <div className="flex items-center gap-0.5 text-gray-900 font-bold">
+                    <Star className="w-3 h-3 fill-current" /> 
+                    <span>{trail.averageRating?.toFixed(1) || "New"}</span>
+                </div>
+                <span>·</span>
+                <span className={trail.difficulty === 'Hard' ? 'text-red-600' : trail.difficulty === 'Moderate' ? 'text-yellow-600' : 'text-green-600'}>
+                    {trail.difficulty || trail.difficult || 'Moderate'}
                 </span>
-              ))}
+                <span>·</span>
+                <span>{trail.length} km</span>
+                <span>·</span>
+                <span>Est. {getDuration(trail.length)}</span>
             </div>
-          </div>
-        )}
-        <div className="flex gap-2 mt-4">
-          <button
-            onClick={() => onJoinClick?.(trail)}
-            className="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors"
-          >
-            Join Hike
-          </button>
-          <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors">
-            View Details
-          </button>
+
+            {/* Join Button (Hidden if Joined) */}
+            {!isJoined ? (
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onJoinClick?.(trail);
+                    }}
+                    className="w-full mt-2 bg-black text-white py-2 rounded-lg text-xs font-bold hover:bg-gray-800 transition-all duration-300 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0"
+                >
+                    Join Hike
+                </button>
+            ) : (
+                <div className="w-full mt-2 py-2 text-center text-blue-600 text-xs font-bold opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                   In Your Plans
+                </div>
+            )}
         </div>
-      </div>
     </div>
   );
 };
@@ -174,13 +134,45 @@ const Pagination = ({ pagination, onPageChange }) => {
   );
 };
 
+import { useUserProfile } from '../hooks/useUserProfile';
+
 export default function TrailListPage() {
   const [activeFilters, setActiveFilters] = useState(initialFilters);
-  const { data, isLoading, isError, error } = useAdminTrail(activeFilters);
+  const { data: user } = useUserProfile();
+  
+  // Create effective filters by removing defaults (which imply "all")
+  const getEffectiveFilters = () => {
+    const filters = { ...activeFilters };
+    if (filters.maxDistance >= 50) delete filters.maxDistance;
+    if (filters.maxElevation >= 3000) delete filters.maxElevation; // Slider max is 3000, initial is 5000
+    if (filters.maxDuration >= 12) delete filters.maxDuration; // Slider max is 12, initial is 24
+    if (filters.difficulty === 'All') delete filters.difficulty;
+    if (!filters.search) delete filters.search;
+    return filters;
+  };
+
+  const { data, trails, isLoading, isError, error } = useAdminTrail(getEffectiveFilters());
   const [trailToJoin, setTrailToJoin] = useState(null);
 
-  const trails = data?.data || [];
   const pagination = data?.pagination || {};
+
+  // Debug Logs
+  useEffect(() => {
+    if (user) {
+        console.log("Logged In User:", user);
+        console.log("Joined Trails:", user.joinedTrails);
+    }
+  }, [user]);
+
+  // Check if user has joined a specific trail
+  const isTrailJoined = (trailId) => {
+    if (!user || !user.joinedTrails) return false;
+    return user.joinedTrails.some(jt => {
+        // Handle both populated (object) and unpopulated (string) states
+        const joinedTrailId = jt.trail?._id || jt.trail;
+        return joinedTrailId === trailId;
+    });
+  };
 
   const handleApplyFilters = (newFilters) => {
     setActiveFilters(prev => ({ ...prev, ...newFilters, page: 1 }));
@@ -234,9 +226,14 @@ export default function TrailListPage() {
           {!isLoading && !isError && (
             <>
               {trails.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {trails.map(trail => (
-                    <TrailCard key={trail._id} trail={trail} onJoinClick={setTrailToJoin} />
+                    <TrailCard 
+                        key={trail._id} 
+                        trail={trail} 
+                        onJoinClick={setTrailToJoin} 
+                        isJoined={isTrailJoined(trail._id)}
+                    />
                   ))}
                 </div>
               ) : (
@@ -248,7 +245,19 @@ export default function TrailListPage() {
                   <p className="text-gray-500">Try adjusting your filters to see more results.</p>
                 </div>
               )}
-              <Pagination pagination={pagination} onPageChange={handlePageChange} />
+              
+              {/* Show More Button */}
+              {trails.length < (pagination.total || 0) && (
+                  <div className="mt-8 flex justify-center">
+                    <Button 
+                        variant="outline" 
+                        onClick={() => setActiveFilters(prev => ({ ...prev, limit: prev.limit + 10 }))}
+                        className="min-w-[200px]"
+                    >
+                        Show More
+                    </Button>
+                  </div>
+              )}
             </>
           )}
         </div>

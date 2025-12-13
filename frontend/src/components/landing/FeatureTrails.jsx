@@ -242,8 +242,9 @@
 
 
 
-import { ArrowRight, Star, ChevronRight } from "lucide-react";
+import { ArrowRight, Star, ChevronRight, CheckCircle, Clock } from "lucide-react";
 import { useAdminTrail } from "../../hooks/admin/useAdminTrail";
+import { useUserProfile } from "../../hooks/useUserProfile";
 import { Link, useNavigate } from "react-router-dom";
 import { ViewTrailDialog } from "../admin/trail_management/ViewTrailDailog";
 import { useState } from "react";
@@ -253,13 +254,13 @@ const FeaturedTrails = () => {
   const [selectedTrail, setSelectedTrail] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const handleViewTrail = (trail) => {
-    setSelectedTrail(trail);
-    setDialogOpen(true);
-  };
-
   // Fetch trails (limit 4 to match screenshot row)
   const { trails, isLoading, isError } = useAdminTrail({ limit: 4 });
+  const { data: user } = useUserProfile();
+
+  const isTrailJoined = (trailId) => {
+    return user?.joinedTrails?.some(jt => (jt.trail._id || jt.trail) === trailId);
+  };
 
   const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5050';
 
@@ -325,6 +326,12 @@ const FeaturedTrails = () => {
                                 alt={trail.name} 
                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                              />
+                             {/* Planned Badge */}
+                             {isTrailJoined(trail._id) && (
+                                <div className="absolute top-3 right-3 bg-blue-600/90 backdrop-blur-sm text-white text-[10px] uppercase font-bold px-2.5 py-1 rounded shadow-sm z-10 flex items-center gap-1">
+                                    <Clock className="w-3 h-3" /> Planned
+                                </div>
+                             )}
                         </div>
 
                         {/* Content */}

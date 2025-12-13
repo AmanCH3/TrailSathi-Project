@@ -22,9 +22,9 @@ export default function TrailGalleryPage() {
   
   // Helper for duplicate image processing or logic if needed
   const getFullImageUrl = (path) => {
-      if (!path) return "/placeholder-trail.jpg";
+      if (!path) return "https://images.unsplash.com/photo-1551632811-561732d1e306?q=80&w=2070&auto=format&fit=crop";
       if (path.startsWith('http')) return path; 
-      const baseUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5050';
+      const baseUrl = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace('/api', '') : 'http://localhost:5050';
       const cleanPath = path.replace(/\\/g, '/');
       return `${baseUrl}/${cleanPath}`;
   };

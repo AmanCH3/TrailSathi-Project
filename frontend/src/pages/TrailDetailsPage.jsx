@@ -20,18 +20,26 @@ import {
 import { Button } from "@/components/ui/button";
 import { CreateReviewModal } from '../components/reviews/CreateReviewModal';
 import { UploadPhotosModal } from '../components/reviews/UploadPhotosModal';
+import { JoinTrailDialog } from '../components/trails/JoinTrailDialog';
+import { useUserProfile } from '../hooks/useUserProfile';
+import { CheckCircle, UserPlus } from 'lucide-react';
 
 export default function TrailDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: trail, isLoading, isError } = useTrail(id);
+  const { data: user } = useUserProfile();
   const [activeTab, setActiveTab] = useState('photos'); // 'photos', 'upload'
+  const [joinDialogOpen, setJoinDialogOpen] = useState(false);
+
+  const isJoined = user?.joinedTrails?.some(jt => (jt.trail._id || jt.trail) === trail?._id);
 
   // Helper to handle image URLs (relative vs absolute)
   const getFullImageUrl = (path) => {
-      if (!path) return "/placeholder-trail.jpg";
-      if (path.startsWith('http')) return path; // Already absolute (e.g., Unsplash)
-      const baseUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5050';
+      if (!path) return "https://images.unsplash.com/photo-1551632811-561732d1e306?q=80&w=2070&auto=format&fit=crop";
+      if (path.startsWith('http')) return path; // Already absolute
+      
+      const baseUrl = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace('/api', '') : 'http://localhost:5050';
       // Ensure backend paths use / instead of \
       const cleanPath = path.replace(/\\/g, '/');
       return `${baseUrl}/${cleanPath}`;
@@ -107,6 +115,21 @@ export default function TrailDetailsPage() {
                     <button className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-gray-200 hover:bg-gray-50 transition-colors font-semibold text-sm">
                         <PlayCircle className="w-5 h-5" /> Preview
                     </button>
+                    
+                    {/* Join Hike Button */}
+                    {isJoined ? (
+                        <button disabled className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-green-600 text-white font-semibold text-sm shadow-md cursor-default">
+                            <CheckCircle className="w-4 h-4" /> Joined
+                        </button>
+                    ) : (
+                         <button 
+                            onClick={() => setJoinDialogOpen(true)}
+                            className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-black text-white hover:bg-gray-800 transition-colors font-semibold text-sm shadow-md"
+                         >
+                            <UserPlus className="w-4 h-4" /> Join Hike
+                        </button>
+                    )}
+
                     <button 
                         onClick={() => navigate(`/trails/${trail._id}/photos`)}
                         className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-gray-200 hover:bg-gray-50 transition-colors font-semibold text-sm"
@@ -114,7 +137,7 @@ export default function TrailDetailsPage() {
                         <Images className="w-5 h-5" /> All photos
                     </button>
                      <UploadPhotosModal trailId={trail._id}>
-                        <button className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-black text-white hover:bg-gray-800 transition-colors font-semibold text-sm shadow-md">
+                        <button className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors font-semibold text-sm shadow-sm">
                             <Upload className="w-4 h-4" /> Upload
                         </button>
                      </UploadPhotosModal>
@@ -125,6 +148,12 @@ export default function TrailDetailsPage() {
                         <Download className="w-4 h-4" />
                     </button>
                 </div>
+                
+                <JoinTrailDialog 
+                    trail={trail} 
+                    isOpen={joinDialogOpen} 
+                    onOpenChange={setJoinDialogOpen} 
+                />
 
                 {/* Stats Row */}
                 <div className="grid grid-cols-4 gap-4 py-6 border-t border-b border-gray-100">

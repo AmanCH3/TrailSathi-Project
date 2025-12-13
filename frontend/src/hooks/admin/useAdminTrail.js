@@ -240,7 +240,7 @@ export const useJoinTrailWithDate = () => {
   return useMutation({
     mutationFn: ({ id, data }) => joinTrailWithDateService(id, data),
     onSuccess: (data) => {
-      toast.success(data?.message || "Hike successfully scheduled!");
+      // toast.success(data?.message || "Hike successfully scheduled!");
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     },
     onError: (err) => {
