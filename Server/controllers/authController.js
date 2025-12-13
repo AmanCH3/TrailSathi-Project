@@ -1,5 +1,9 @@
 const User = require('../models/user.model');
 const jwt = require('jsonwebtoken');
+const sendEmail = require('../utils/email');
+const { resetPasswordOtpTemplate } = require('../utils/emailTemplates');
+
+
 
 // Generate JWT Token
 const generateToken = (id) => {
@@ -80,6 +84,103 @@ exports.logout = async (req, res) => {
     });
 
     res.status(200).json({ success: true, data: {} });
+};
+
+
+
+// @desc    Forgot Password
+// @route   POST /api/auth/forgot-password
+// @access  Public
+exports.forgotPassword = async (req, res) => {
+  console.log('📩 /forgot-password hit, body =', req.body);
+
+  try {
+    const user = await User.findOne({ email: req.body.email });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: 'There is no user with that email' });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    console.log('Generated OTP:', otp, 'for user:', user.email);
+
+    user.passwordResetOTP = otp;
+    user.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+    await user.save({ validateBeforeSave: false });
+
+    const plainTextMessage = `Your TrailSathi password reset OTP is ${otp}. It is valid for 10 minutes. If you did not request this, you can ignore this email.`;
+
+    const htmlMessage = resetPasswordOtpTemplate({
+      name: user.name || 'TrailSathi Explorer',
+      otp,
+    });
+
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: 'TrailSathi – Password Reset OTP',
+        message: plainTextMessage,
+        html: htmlMessage,   // 👈 pass html to your mailer
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: 'OTP sent to email!',
+      });
+    } catch (err) {
+      console.error('Send Email Error:', err);
+      user.passwordResetOTP = undefined;
+      user.passwordResetExpires = undefined;
+      await user.save({ validateBeforeSave: false });
+
+      return res.status(500).json({
+        success: false,
+        message: 'Email could not be sent',
+        error: err.message,
+      });
+    }
+  } catch (err) {
+    console.error('❌ forgotPassword error:', err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+}
+// @desc    Reset Password
+// @route   PUT /api/auth/reset-password
+// @access  Public
+exports.resetPassword = async (req, res, next) => {
+    try {
+        const { email, otp, password, confirmPassword } = req.body;
+
+        if (!email || !otp || !password || !confirmPassword) {
+            return res.status(400).json({ success: false, message: 'Please provide all fields' });
+        }
+
+        if (password !== confirmPassword) {
+             return res.status(400).json({ success: false, message: 'Passwords do not match' });
+        }
+
+        const user = await User.findOne({
+            email,
+            passwordResetOTP: otp,
+            passwordResetExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ success: false, message: 'Invalid OTP or OTP has expired' });
+        }
+
+        user.password = password;
+        user.passwordResetOTP = undefined;
+        user.passwordResetExpires = undefined;
+
+        await user.save();
+
+        sendTokenResponse(user, 200, res);
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
 };
 
 // Get token from model, create cookie and send response
