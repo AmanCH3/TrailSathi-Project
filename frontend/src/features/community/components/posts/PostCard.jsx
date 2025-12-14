@@ -14,7 +14,7 @@ export const PostCard = ({ post }) => {
     likeMutation.mutate({
       postId: post.id || post._id,
       isLiked: post.isLiked,
-      groupId: post.group // Pass group ID for invalidation
+      groupId: post.group?._id || post.group // Pass group ID for invalidation
     });
   };
 
@@ -55,8 +55,8 @@ export const PostCard = ({ post }) => {
         </div>
 
         {/* Content */}
-        {post.text && (
-          <p className="text-gray-800 text-sm leading-relaxed mb-4 whitespace-pre-wrap">{post.text}</p>
+        {post.content && (
+          <p className="text-gray-800 text-sm leading-relaxed mb-4 whitespace-pre-wrap">{post.content}</p>
         )}
 
         {/* Images */}

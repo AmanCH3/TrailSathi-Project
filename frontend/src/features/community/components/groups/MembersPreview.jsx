@@ -15,7 +15,7 @@ export const MembersPreview = ({ members = [], totalCount = 0, onViewAll }) => {
         {displayMembers.map((member, index) => (
           <div
             key={member.id || member._id || index}
-            className="w-10 h-10 rounded-full border-2 border-slate-900 overflow-hidden bg-slate-800"
+            className="w-10 h-10 rounded-full border-2 border-white overflow-hidden bg-gray-100"
             title={member.name}
           >
             {member.avatar && member.avatar !== '/default-avatar.jpg' ? (
@@ -41,7 +41,7 @@ export const MembersPreview = ({ members = [], totalCount = 0, onViewAll }) => {
       {onViewAll && (
         <button
           onClick={onViewAll}
-          className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors"
+          className="text-sm text-emerald-600 hover:text-emerald-700 transition-colors font-medium"
         >
           View all {totalCount} members →
         </button>

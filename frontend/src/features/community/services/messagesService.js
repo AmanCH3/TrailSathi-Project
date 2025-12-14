@@ -11,7 +11,7 @@ export const messagesService = {
     const { data } = await axiosInstance.get(
       ENDPOINTS.CONVERSATION_MESSAGES(conversationId)
     );
-    return data;
+    return data.data;
   },
 
   sendMessage: async (conversationId, message) => {

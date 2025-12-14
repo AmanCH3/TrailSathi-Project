@@ -45,23 +45,24 @@ export const MembersModal = ({ isOpen, onClose, groupId, onMessageMember }) => {
         </button>
       </ModalHeader>
 
-      <ModalBody>
-        <div className="mb-4">
+      <ModalBody className="p-0">
+        <div className="p-4 border-b border-gray-100 bg-white sticky top-0 z-10">
           <SearchInput
-            placeholder="Search members..."
+            placeholder="Search by name..."
             value={search}
             onChange={handleSearch}
+            className="w-full bg-gray-50 border-gray-200 focus:bg-white transition-colors py-2.5"
           />
         </div>
 
         {isLoading && (
-          <div className="space-y-3">
+          <div className="p-4 space-y-4">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex items-center gap-3 p-3">
+              <div key={i} className="flex items-center gap-4">
                 <Skeleton className="w-12 h-12 rounded-full" />
-                <div className="flex-1">
-                  <Skeleton className="h-4 w-32 mb-2" />
-                  <Skeleton className="h-3 w-20" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-1/3 rounded" />
+                  <Skeleton className="h-3 w-1/5 rounded" />
                 </div>
               </div>
             ))}
@@ -69,50 +70,55 @@ export const MembersModal = ({ isOpen, onClose, groupId, onMessageMember }) => {
         )}
 
         {!isLoading && (!data?.members || data.members.length === 0) && (
-          <EmptyState
-            title="No members found"
-            description={search ? 'Try a different search term' : 'This group has no members yet'}
-          />
+          <div className="p-8">
+            <EmptyState
+                icon={null} // Cleaner empty state
+                title="No members found"
+                description={search ? 'Try searching for someone else' : 'It looks a bit quiet here'}
+            />
+          </div>
         )}
 
         {!isLoading && data?.members && data.members.length > 0 && (
-          <div className="space-y-2 max-h-[500px] overflow-y-auto">
+          <div className="max-h-[500px] overflow-y-auto">
             {data.members.map((member) => (
               <div
                 key={member.id || member._id}
-                className="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border border-gray-100"
+                className="group flex items-center justify-between p-4 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0"
               >
-                <div className="w-12 h-12 rounded-full overflow-hidden bg-slate-800 flex-shrink-0">
-                  {member.avatar && member.avatar !== '/default-avatar.jpg' ? (
-                    <img
-                      src={member.avatar}
-                      alt={member.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-emerald-600 text-white font-bold text-lg">
-                      {member.name?.charAt(0)?.toUpperCase() || 'M'}
-                    </div>
-                  )}
-                </div>
+                <div className="flex items-center gap-4">
+                  <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gray-100 border border-gray-100 flex-shrink-0">
+                    {member.avatar && member.avatar !== '/default-avatar.jpg' ? (
+                      <img
+                        src={member.avatar}
+                        alt={member.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-500 font-bold text-lg">
+                        {member.name?.charAt(0)?.toUpperCase() || 'M'}
+                      </div>
+                    )}
+                  </div>
 
-                <div className="flex-1 min-w-0">
-                  <p className="text-gray-900 font-medium truncate">{member.name}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    {getRoleBadge(member)}
+                  <div>
+                    <div className="flex items-center gap-2">
+                        <p className="text-gray-900 font-semibold text-base">{member.name}</p>
+                        {getRoleBadge(member)}
+                    </div>
+                    {/* Optional: Add location or join date if available for more context, or keep minimal */}
+                    {/* <p className="text-sm text-gray-500">Joined Oct 2023</p> */}
                   </div>
                 </div>
 
                 {onMessageMember && (
-                  <Button
-                    variant="secondary"
-                    size="sm"
+                  <button
                     onClick={() => handleMessageClick(member)}
-                    className="flex items-center gap-2 flex-shrink-0"
+                    className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-all"
+                    title="Send Message"
                   >
-                    <MessageCircle className="w-4 h-4" />
-                    Message
-                  </Button>
+                    <MessageCircle className="w-5 h-5" />
+                  </button>
                 )}
               </div>
             ))}

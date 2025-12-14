@@ -11,6 +11,14 @@ export const useConversations = () => {
   });
 };
 
+export const useConversation = (conversationId) => {
+  return useQuery({
+    queryKey: ['conversation', conversationId],
+    queryFn: () => messagesService.getConversation(conversationId),
+    enabled: !!conversationId,
+  });
+};
+
 export const useMessages = (conversationId) => {
   return useQuery({
     queryKey: ['messages', conversationId],
@@ -53,8 +61,8 @@ export const useCreateConversation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ recipientId, initialMessage }) =>
-      messagesService.createConversation(recipientId, initialMessage),
+    mutationFn: ({ recipientId, initialMessage, relatedEventId }) =>
+      messagesService.createConversation(recipientId, initialMessage, relatedEventId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
     },

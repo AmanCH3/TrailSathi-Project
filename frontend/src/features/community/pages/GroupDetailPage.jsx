@@ -38,8 +38,8 @@ export const GroupDetailPage = () => {
   const createPostMutation = useCreatePost(groupId);
   const likeMutation = useLikePost();
 
-  // Events data
-  const { data: eventsData, isLoading: isLoadingEvents } = useEvents(activeTab === 'events' ? groupId : null);
+  // Events data - fetch always to show upcoming highlight
+  const { data: eventsData, isLoading: isLoadingEvents } = useEvents(groupId);
   const rsvpMutation = useRSVPEvent();
 
   // Messaging
@@ -110,7 +110,15 @@ export const GroupDetailPage = () => {
   if (!group) return null;
 
   const canViewContent = group?.privacy === 'public' || group?.isMember;
-  const upcomingEvent = eventsData?.events?.[0];
+  
+  // Logic to find the *next* upcoming event
+  const upcomingEvent = eventsData?.events?.filter(e => {
+      const eventDate = new Date(e.startDateTime || e.date);
+      const now = new Date();
+      return eventDate > now && e.status !== 'Cancelled';
+  }).sort((a, b) => {
+      return new Date(a.startDateTime || a.date) - new Date(b.startDateTime || b.date);
+  })[0];
   
   // Calculate ownership safely
   const isOwner = group?.owner?._id === currentUserId || group?.owner?.id === currentUserId || group?.name === 'Photography Club';

@@ -55,6 +55,7 @@ export const EventDetailModal = ({ isOpen, onClose, eventId }) => {
       const conversation = await createConversationMutation.mutateAsync({
         recipientId: event.host.id || event.host._id,
         initialMessage: `Hi! I'm interested in the event: ${event.title}`,
+        relatedEventId: eventId
       });
       navigate(`/messenger/${conversation.id || conversation._id}`);
       onClose();
@@ -119,15 +120,21 @@ export const EventDetailModal = ({ isOpen, onClose, eventId }) => {
                           <div className="flex items-center gap-4 text-white/90 text-sm font-medium">
                               <div className="flex items-center gap-1.5">
                                   <Calendar className="w-4 h-4" />
-                                  {formatDateTime(event.date)}
+                                  {formatDateTime(event.startDateTime || event.date)}
                               </div>
-                              {event.location && (
+                              {(event.meetLocation || event.location) && (
                                 <div className="flex items-center gap-1.5">
                                     <MapPin className="w-4 h-4" />
-                                    {event.location}
+                                    {event.meetLocation || event.location}
                                 </div>
                               )}
                           </div>
+                          {event.trailName && (
+                              <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-600/80 text-white text-xs font-medium backdrop-blur-md">
+                                  <MapPin className="w-3 h-3" />
+                                  Hike: {event.trailName}
+                              </div>
+                          )}
                       </div>
                   </div>
 
@@ -137,8 +144,8 @@ export const EventDetailModal = ({ isOpen, onClose, eventId }) => {
                       <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                               <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 border border-gray-200">
-                                  {event.host?.avatar ? (
-                                      <img src={getAssetUrl(event.host.avatar)} alt={event.host.name} className="w-full h-full object-cover" />
+                                  {event.host?.avatar || event.host?.profileImage ? (
+                                      <img src={getAssetUrl(event.host?.avatar || event.host?.profileImage)} alt={event.host.name} className="w-full h-full object-cover" />
                                   ) : (
                                       <div className="w-full h-full flex items-center justify-center bg-emerald-100 text-emerald-700 font-bold">
                                           {event.host?.name?.[0] || 'H'}
@@ -150,10 +157,13 @@ export const EventDetailModal = ({ isOpen, onClose, eventId }) => {
                                   <p className="text-base font-bold text-gray-900">{event.host?.name || 'Unknown'}</p>
                               </div>
                           </div>
-                          <Button variant="outline" size="sm" onClick={handleMessageHost} className="gap-2">
-                              <MessageCircle className="w-4 h-4" />
-                              Message
-                          </Button>
+                          {/* Only show message button if user is not the host */}
+                          {event.host && (event.host.id !== localStorage.getItem('userId') && event.host._id !== localStorage.getItem('userId')) && (
+                              <Button variant="outline" size="sm" onClick={handleMessageHost} className="gap-2">
+                                  <MessageCircle className="w-4 h-4" />
+                                  Message
+                              </Button>
+                          )}
                       </div>
 
                       {/* Info Grid */}
@@ -161,7 +171,10 @@ export const EventDetailModal = ({ isOpen, onClose, eventId }) => {
                           <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 flex flex-col items-center text-center">
                               <Users className="w-6 h-6 text-emerald-600 mb-2" />
                               <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Attendees</span>
-                              <span className="text-lg font-bold text-gray-900">{event.rsvpCount || 0}</span>
+                              <span className="text-lg font-bold text-gray-900">
+                                  {event.rsvpCount || 0}
+                                  {event.maxParticipants ? ` / ${event.maxParticipants}` : ''}
+                              </span>
                           </div>
                           {event.isConfirmed && (
                             <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-100 flex flex-col items-center text-center">

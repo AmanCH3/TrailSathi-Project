@@ -39,11 +39,18 @@ export const ConversationItem = ({ conversation, isActive, onClick }) => {
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-1">
-          <p className={cn('font-semibold truncate text-sm', hasUnread ? 'text-gray-900' : 'text-gray-700')}>
-            {conversation.participant.name}
-          </p>
+          <div className="flex flex-col overflow-hidden mr-2">
+            <p className={cn('font-semibold truncate text-sm', hasUnread ? 'text-gray-900' : 'text-gray-700')}>
+               {conversation.participant.name}
+            </p>
+            {conversation.relatedEvent && (
+                <span className="text-[10px] text-emerald-600 font-medium truncate bg-emerald-50 px-1.5 py-0.5 rounded-md self-start mt-0.5">
+                    {conversation.relatedEvent.title}
+                </span>
+            )}
+          </div>
           {conversation.lastMessageTime && (
-             <span className="text-[10px] text-gray-400 flex-shrink-0 ml-2">
+             <span className="text-[10px] text-gray-400 flex-shrink-0">
                {formatTimestamp(conversation.lastMessageTime)}
              </span>
           )}

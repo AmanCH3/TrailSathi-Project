@@ -19,17 +19,17 @@ export const Modal = ({ isOpen, onClose, title, children, className, size = 'md'
       />
       <div
         className={cn(
-          'relative w-full bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden flex flex-col',
+          'relative w-full bg-white border border-gray-100 rounded-2xl shadow-xl max-h-[90vh] overflow-hidden flex flex-col',
           sizeClasses[size],
           className
         )}
       >
         {title && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
-            <h2 className="text-xl font-semibold text-slate-100">{title}</h2>
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <h2 className="text-xl font-bold text-gray-900">{title}</h2>
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-slate-200 transition-colors"
+              className="p-2 -mr-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
             >
               <X className="w-5 h-5" />
             </button>
@@ -42,17 +42,17 @@ export const Modal = ({ isOpen, onClose, title, children, className, size = 'md'
 };
 
 export const ModalHeader = ({ children, className }) => (
-  <div className={cn('px-6 py-4 border-b border-slate-800', className)}>
+  <div className={cn('px-6 py-4 border-b border-gray-100 bg-white sticky top-0 z-10', className)}>
     {children}
   </div>
 );
 
 export const ModalBody = ({ children, className }) => (
-  <div className={cn('px-6 py-4', className)}>{children}</div>
+  <div className={cn('p-6', className)}>{children}</div>
 );
 
 export const ModalFooter = ({ children, className }) => (
-  <div className={cn('px-6 py-4 border-t border-slate-800 flex justify-end gap-3', className)}>
+  <div className={cn('px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3', className)}>
     {children}
   </div>
 );

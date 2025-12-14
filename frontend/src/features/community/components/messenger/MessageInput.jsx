@@ -31,21 +31,21 @@ export const MessageInput = ({ onSendMessage, disabled }) => {
           placeholder="Type a message..."
           rows={1}
           disabled={disabled}
-          className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 resize-none disabled:opacity-50 transition-all font-medium"
+          className="flex-1 px-4 py-3 bg-gray-50 border-0 rounded-full text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:bg-white resize-none disabled:opacity-50 transition-all font-normal text-sm"
           style={{
-            minHeight: '48px',
-            maxHeight: '128px',
+            minHeight: '44px',
+            maxHeight: '120px',
           }}
           onInput={(e) => {
             e.target.style.height = 'auto';
-            e.target.style.height = Math.min(e.target.scrollHeight, 128) + 'px';
+            e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
           }}
         />
         <Button
           type="submit"
           variant="primary"
           disabled={!message.trim() || disabled}
-          className="flex items-center justify-center p-3 h-[48px] w-[48px] rounded-xl shadow-md hover:shadow-lg transition-all"
+          className="flex items-center justify-center h-[44px] w-[44px] rounded-full shadow-none hover:shadow-md transition-all bg-emerald-600 hover:bg-emerald-700 p-0"
         >
           <Send className="w-5 h-5 ml-0.5" />
         </Button>

@@ -1,16 +1,17 @@
 import { useEffect, useRef } from 'react';
-import { useMessages, useSendMessage, useMarkAsRead } from '../../hooks/useMessages';
+import { MessageCircle, Calendar } from 'lucide-react';
+import { useMessages, useSendMessage, useMarkAsRead, useConversation } from '../../hooks/useMessages';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
 import { Skeleton } from '../ui/Skeleton';
 import { EmptyState } from '../ui/EmptyState';
-import { MessageCircle } from 'lucide-react';
 
 import { getAssetUrl } from '@/utils/imagePath';
 
 export const MessageThread = ({ conversationId, participant, currentUserId }) => {
   const messagesEndRef = useRef(null);
   const { data, isLoading } = useMessages(conversationId);
+  const { data: conversationDetails } = useConversation(conversationId);
   const sendMutation = useSendMessage();
   const markReadMutation = useMarkAsRead();
 
@@ -75,7 +76,17 @@ export const MessageThread = ({ conversationId, participant, currentUserId }) =>
              </span>
           </div>
         </div>
-      </div>
+        </div>
+
+       {/* Event Banner */}
+       {conversationDetails?.relatedEvent && (
+          <div className="bg-emerald-50 px-6 py-2 border-b border-emerald-100 flex items-center gap-2">
+             <Calendar className="w-4 h-4 text-emerald-600" />
+             <p className="text-xs text-emerald-800 font-medium">
+               Event: <span className="font-bold">{conversationDetails.relatedEvent.title}</span>
+             </p>
+          </div>
+       )}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 bg-gray-50">

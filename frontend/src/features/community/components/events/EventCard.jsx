@@ -33,7 +33,7 @@ export const EventCard = ({ event, onRSVP, onViewDetails }) => {
         )}
         <div className="flex items-center gap-2 text-gray-600 font-medium text-sm">
              <Calendar className="w-4 h-4 text-gray-400" />
-             <span>{formatDateTime(event.date)}</span>
+             <span>{formatDateTime(event.startDateTime || event.date)}</span>
         </div>
       </div>
 

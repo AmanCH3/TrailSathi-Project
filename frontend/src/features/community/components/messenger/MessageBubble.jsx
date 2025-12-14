@@ -19,32 +19,24 @@ export const MessageBubble = ({ message, isOwn, senderAvatar, senderName }) => {
       )}
 
       {/* Message Content */}
-      <div className={cn('flex flex-col max-w-[70%]', isOwn && 'items-end')}>
+      <div className={cn('flex flex-col max-w-[75%]', isOwn && 'items-end')}>
         {!isOwn && (
-          <span className="text-[10px] text-gray-500 mb-1 ml-1 font-medium">{senderName}</span>
+          <span className="text-[11px] text-gray-500 mb-1 ml-1 font-medium">{senderName}</span>
         )}
         <div
           className={cn(
-            'px-5 py-2.5 shadow-sm relative group',
+            'px-4 py-2 shadow-sm break-words text-sm leading-relaxed',
             isOwn
-              ? 'bg-emerald-600 text-white rounded-[20px] rounded-tr-md'
-              : 'bg-white border border-gray-100 text-gray-800 rounded-[20px] rounded-tl-md'
+              ? 'bg-emerald-600 text-white rounded-2xl rounded-tr-sm'
+              : 'bg-white border border-gray-100 text-gray-800 rounded-2xl rounded-tl-sm'
           )}
         >
-          <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">{message.text}</p>
-          
-          <span className={cn(
-              "text-[9px] absolute bottom-1 right-3 opacity-0 group-hover:opacity-100 transition-opacity",
-              isOwn ? "text-emerald-100" : "text-gray-400"
-          )}>
-            {formatTimestamp(message.createdAt)}
-          </span>
+          {message.text}
         </div>
-        {/* Always visible timestamp outside or minimal? Let's keep it clean inside or just below if user wants. 
-            User asked for "user friendly", usually seeing time is good. 
-            I'll put it outside, very small.
-        */}
-        <span className="text-[9px] text-gray-400 mt-1 mx-2">
+        <span className={cn(
+            "text-[10px] text-gray-400 mt-1 select-none",
+            isOwn ? "mr-1 text-right" : "ml-1"
+        )}>
            {formatTimestamp(message.createdAt)}
         </span>
       </div>
