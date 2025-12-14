@@ -26,6 +26,9 @@ import ChecklistPage from "../pages/ChecklistPage";
 import ProfilePage from "../pages/ProfilePage";
 import GoogleAuthCallback from "../pages/GoogleAuthCallBack";
 
+// Community Feature Pages
+import { GroupsDiscoveryPage, GroupDetailPage, EventDetailPage, MessengerPage } from "../features/community";
+
 // It's good practice to create a simple component for the failure page too
 const EsewaFailurePage = () => (
     <div className="flex items-center justify-center h-screen">
@@ -57,6 +60,20 @@ export default function AppRouter() {
           <Route path="groups" element={<GroupsPage />} />
           <Route path="payments" element={<PaymentsPage />} />
 
+          {/* Community Feature Routes */}
+          <Route path="community/groups" element={<GroupsDiscoveryPage />} />
+          <Route path="community/groups/:groupId" element={<GroupDetailPage />} />
+          <Route path="community/groups/:groupId/events/:eventId" element={<EventDetailPage />} />
+          <Route path="messenger" element={
+            <ProtectedRoute>
+              <MessengerPage />
+            </ProtectedRoute>
+          } />
+          <Route path="messenger/:conversationId" element={
+            <ProtectedRoute>
+              <MessengerPage />
+            </ProtectedRoute>
+          } />
 
           <Route path="profile" element={
             <ProtectedRoute>

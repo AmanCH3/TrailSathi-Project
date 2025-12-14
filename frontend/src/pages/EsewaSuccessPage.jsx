@@ -2,7 +2,7 @@ import React, { useEffect, useContext } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'react-toastify'; // Adjust path if necessary
-import { AuthContext } from '../auth/authProvider';
+import { useAuth } from '../app/providers/AuthProvider';
 
 export default function EsewaSuccessPage() {
   const navigate = useNavigate();

@@ -3,7 +3,7 @@
 // import { useContext } from "react";
 
 // import React from 'react'
-// import { AuthContext } from "../auth/authProvider";
+// import { useAuth } from '../app/providers/AuthProvider';
 
 // export default function NormalUserRoute() {
 //     const { user, loading } = useContext(AuthContext)

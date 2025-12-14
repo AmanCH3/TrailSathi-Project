@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Check, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { postToEsewa } from '../../utils/esewa';
-import { AuthContext } from '../../auth/authProvider';
+import { useAuth } from '@/app/providers/AuthProvider';
 
 const plansData = [
     {

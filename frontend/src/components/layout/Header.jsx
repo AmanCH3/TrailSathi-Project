@@ -51,7 +51,7 @@ export default function Header() {
                     <div className="bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden py-1.5">
                         <Link to="/trails" className="block px-4 py-2 hover:bg-gray-50 text-gray-700 hover:text-black transition-colors">Trails</Link>
                         <Link to="/checklist" className="block px-4 py-2 hover:bg-gray-50 text-gray-700 hover:text-black transition-colors">Checklist</Link>
-                        <Link to="/groups" className="block px-4 py-2 hover:bg-gray-50 text-gray-700 hover:text-black transition-colors">Group</Link>
+                        <Link to="/community/groups" className="block px-4 py-2 hover:bg-gray-50 text-gray-700 hover:text-black transition-colors">Groups</Link>
                         <Link to="/payments" className="block px-4 py-2 hover:bg-gray-50 text-gray-700 hover:text-black transition-colors">Payment</Link>
                     </div>
                 </div>
@@ -100,7 +100,7 @@ export default function Header() {
                 </div>
                 <Link to="/trails" className="font-medium text-gray-700 py-2">Trails</Link>
                 <Link to="/checklist" className="font-medium text-gray-700 py-2">Checklist</Link>
-                 <Link to="/groups" className="font-medium text-gray-700 py-2">Groups</Link>
+                 <Link to="/community/groups" className="font-medium text-gray-700 py-2">Groups</Link>
                 <Link to="/saved" className="font-medium text-gray-700 py-2">Saved</Link>
                 {isAuthenticated ? (
                      <button onClick={logout} className="text-red-600 text-left font-medium py-2">Logout</button>

@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Loader2 } from "lucide-react";
-import { AuthContext } from '../../auth/authProvider';
+import { useAuth } from '@/app/providers/AuthProvider';
 
 // Helper function to render status badges
 const getStatusBadge = (status) => {

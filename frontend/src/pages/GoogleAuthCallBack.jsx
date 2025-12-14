@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../auth/authProvider';
+import { useAuth } from '../app/providers/AuthProvider';
 import { jwtDecode } from 'jwt-decode'; 
 
 export default function GoogleAuthCallback() {
