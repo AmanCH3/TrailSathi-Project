@@ -1,11 +1,12 @@
 import React from 'react';
-import { ArrowRight, Calendar, User, MapPin } from 'lucide-react'; // Added MapPin
+import { ArrowRight, Star, ChevronRight, User, Lock, Globe } from 'lucide-react';
 import { useGroup } from '../../hooks/useGroup';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ENV } from "@config/env";
 
 const GroupActivities = () => {
-  const { group: groups, isLoading, isError } = useGroup(1, 4); // Fetch 4 groups for the landing page
+    const navigate = useNavigate();
+  const { group: groups, isLoading, isError } = useGroup(); // Fetch groups
   const API_URL = ENV.API_URL;
 
   // Helper to get image URL
@@ -22,8 +23,17 @@ const GroupActivities = () => {
 
   if (isLoading) {
     return (
-      <section className="py-16 px-6 bg-gray-50 text-center">
-         <p>Loading activities...</p>
+      <section className="py-12 px-6 max-w-[1440px] mx-auto">
+         <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-8"></div>
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[1,2,3,4].map(i => (
+                <div key={i} className="space-y-3">
+                    <div className="h-64 bg-gray-200 rounded-2xl animate-pulse"></div>
+                    <div className="h-6 w-3/4 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+            ))}
+         </div>
       </section>
     );
   }
@@ -33,79 +43,66 @@ const GroupActivities = () => {
   }
 
   return (
-    <section className="py-16 px-6 bg-gray-50">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-10">
-          <h2 className="text-3xl font-bold text-gray-900">Recent Group Activities</h2>
-          <Link to="/groups" className="flex items-center gap-2 text-sm font-semibold text-gray-900 hover:text-green-600 transition-colors">
+    <section className="py-12 px-6 max-w-[1440px] mx-auto font-sans relative bg-gray-50">
+      <div className="flex justify-between items-end mb-8">
+          {/* Renaming title to sound more like a "Featured" section as requested implicitly by design matching */}
+          <h2 className="text-4xl font-extrabold text-gray-900 tracking-tight">Community Groups</h2>
+          <Link to="/groups" className="text-sm font-medium text-gray-700 hover:text-black flex items-center gap-1 transition-colors">
             View all <ArrowRight className="w-4 h-4" />
           </Link>
-        </div>
+      </div>
 
+       <div className="relative group/container">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {groups.slice(0, 4).map((activity) => {
-            // Check participants count (assuming backend sends participants array or memberCount)
-            // Model says: memberCount and admins/owner. It implies participants might be stored in GroupMembership?
-            // "getAllGroups" in controller strictly returns Group docs. Group doc has 'memberCount'.
-            // It does NOT have 'participants' array populated usually in list view unless virtual?
-            // Model has no virtual 'participants'.
-            // So we use 'memberCount'.
-            
-            const spotsFilled = activity.memberCount || 1; 
-            const spotsLeft = 10 - spotsFilled; // Hardcode max size if not in model? Model doesn't have maxSize.
+          {groups.slice(0, 4).map((group) => (
+             <div 
+                key={group._id} 
+                className="group flex flex-col gap-3 cursor-pointer"
+                onClick={() => navigate(`/groups/${group._id}`)}
+              >
+                 {/* Image Card */}
+                <div className="relative overflow-hidden rounded-2xl aspect-[4/3] w-full bg-gray-100">
+                    <img 
+                      src={getImageUrl(group)} 
+                      alt={group.name} 
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    
+                    {/* Privacy Badge */}
+                    <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-gray-800 text-[10px] uppercase font-bold px-2.5 py-1 rounded shadow-sm z-10 flex items-center gap-1">
+                        {group.privacy === 'private' ? <Lock className="w-3 h-3" /> : <Globe className="w-3 h-3" />}
+                        {group.privacy}
+                    </div>
+                </div>
 
-            return (
-            <div key={activity._id} className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100 flex flex-col">
-              {/* Image Header */}
-              <div className="h-40 w-full overflow-hidden relative">
-                   <img 
-                      src={getImageUrl(activity)} 
-                      alt={activity.name} 
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                   />
-                   <div className="absolute top-2 right-2 bg-white/90 px-2 py-1 rounded text-xs font-bold text-green-700">
-                      {spotsLeft > 0 ? `${spotsLeft} spots left` : 'Open'}
+                {/* Content */}
+                <div className="space-y-1">
+                   <h3 className="text-xl font-bold text-gray-900 leading-snug truncate">
+                        {group.name}
+                   </h3>
+                   <p className="text-sm text-gray-500 font-medium truncate">
+                        {group.location || "Online Community"}
+                   </p>
+
+                   {/* Meta Row */}
+                   <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium mt-1">
+                        <div className="flex items-center gap-0.5 text-gray-900 font-bold">
+                            <User className="w-3 h-3" />
+                            <span>{group.memberCount || 1} Members</span>
+                        </div>
+                        <span>·</span>
+                        <span>{group.postCount || 0} Posts</span>
+                        <span>·</span>
+                        <span className="text-green-600">Active</span>
                    </div>
-              </div>
-
-              {/* Activity Info */}
-              <div className="p-5 flex-grow">
-                 <h3 className="font-bold text-gray-900 mb-1 line-clamp-1" title={activity.name}>{activity.name}</h3>
-                 
-                 <div className="space-y-2 mb-4 mt-2">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Calendar className="w-4 h-4 text-green-600" />
-                        <span>
-                            {new Date(activity.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                        </span>
-                    </div>
-                    {activity.location && (
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <MapPin className="w-4 h-4 text-green-600" />
-                            <span className="truncate">{activity.location}</span>
-                        </div>
-                    )}
-                     <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <User className="w-4 h-4 text-green-600" />
-                        <div className="flex flex-col">
-                           {/* Owner is likely just an ID in this view */}
-                            <span className="font-medium truncate max-w-[150px]">{typeof activity.owner === 'object' ? activity.owner.name : "Group Admin"}</span>
-                        </div>
-                    </div>
-                 </div>
-              </div>
-              
-              {/* Join Button */}
-              <div className="p-4 pt-0">
-                  <Link to={`/groups/${activity._id}`}>
-                    <button className="w-full bg-[#3A5A40] hover:bg-[#2f4a33] text-white py-2.5 rounded-lg font-medium text-sm transition-colors text-center">
-                        View Group
-                    </button>
-                  </Link>
-              </div>
+                </div>
             </div>
-          )})}
+          ))}
         </div>
+         {/* Navigation Arrow (matching FeaturedTrails) */}
+         <button className="absolute -right-5 top-1/2 -translate-y-1/2 translate-x-full w-10 h-10 bg-white rounded-full shadow-md border border-gray-100 flex items-center justify-center hover:bg-gray-50 transition-colors z-10 hidden xl:flex">
+            <ChevronRight className="w-5 h-5 text-gray-700" />
+        </button>
       </div>
     </section>
   );

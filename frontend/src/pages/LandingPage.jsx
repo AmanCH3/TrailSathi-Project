@@ -12,8 +12,8 @@ export default function LandingPage() {
       <HeroSection/>
       {/* Spacer or padding if needed, but components handle their own py */}
       <FeaturedTrails/>
-      <CommunityGallery/>
       <GroupActivities/>
+      <CommunityGallery/>
       <CallToAction/>
       
       <Footer/>
