@@ -8,6 +8,7 @@ exports.getConversations = catchAsync(async (req, res, next) => {
         participants: req.user.id
     })
     .populate('participants', 'name profileImage') // to show who you are talking to
+    .populate('relatedEvent', 'title startDateTime')
     .sort('-lastMessageAt');
 
     res.status(200).json({
@@ -18,25 +19,27 @@ exports.getConversations = catchAsync(async (req, res, next) => {
 });
 
 exports.createConversation = catchAsync(async (req, res, next) => {
-    const { recipientId } = req.body;
+    const { recipientId, relatedEventId } = req.body;
 
     // Check if conversation already exists between these two users
-    // This logic assumes 1-on-1 for simplicity as per standard DMs
-    // If we support group DMs, logic is different. "Participant list exact match".
-    // For now, assuming direct message:
-    
-    // Find conversation where participants contains both IDs and size 2
-    let conversation = await Conversation.findOne({
+    const query = {
         participants: { $all: [req.user.id, recipientId], $size: 2 },
-        relatedGroup: null // Ensure it's not a group context if we reuse model? 
-                           // Actually Group Chat uses GroupMessage model, unrelated to Conversation usually. 
-                           // But User request implies unified "Conversation" for DMs.
-    });
+        relatedGroup: null
+    };
+
+    if (relatedEventId) {
+        query.relatedEvent = relatedEventId;
+    } else {
+        query.relatedEvent = null;
+    }
+
+    let conversation = await Conversation.findOne(query);
 
     if (!conversation) {
         conversation = await Conversation.create({
             participants: [req.user.id, recipientId],
-            unreadBy: [recipientId] // Initial state? Or empty until first msg?
+            unreadBy: [recipientId],
+            relatedEvent: relatedEventId || null
         });
     }
 
@@ -48,7 +51,8 @@ exports.createConversation = catchAsync(async (req, res, next) => {
 
 exports.getConversation = catchAsync(async (req, res, next) => {
     const conversation = await Conversation.findById(req.params.conversationId)
-        .populate('participants', 'name profileImage');
+        .populate('participants', 'name profileImage')
+        .populate('relatedEvent', 'title startDateTime');
         
     if (!conversation) return next(new AppError('Conversation not found', 404));
 

@@ -39,7 +39,7 @@ export const useCreateGroup = () => {
             mutationKey : ['create_group'],
             mutationFn : createOneGroupService,
             onSuccess : (data) => {
-                toast.success(data?.message || "Group Created Succesfully")
+                // Toast handled in component
                 queryClient 
                 .invalidateQueries ({
                     queryKey : ['group']

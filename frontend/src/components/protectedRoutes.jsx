@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../auth/authProvider';
+import { useAuth } from '../app/providers/AuthProvider';
 
 const ProtectedRoute = ({ children, adminOnly }) => {
   const { user, loading, isAuthenticated } = useAuth();

@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom"; // Use react-router-dom hook
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,42 +12,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
-import { CalendarIcon, MapPin, Clock, Mountain, Plus, X } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import { useCreateGroup } from "../../hooks/useGroup"; 
-import { useAdminTrail } from "../../hooks/admin/useAdminTrail"; 
+import { X, Upload, MapPin, Hash, Lock, Globe } from "lucide-react";
+import { useCreateGroup } from "../../hooks/useGroup";
 import { toast } from "react-toastify";
 
 export function CreateGroupForm({ user, onSuccess }) {
   const navigate = useNavigate();
   const { mutate: createGroup, isPending: isLoading } = useCreateGroup();
-  const { trails: availableTrails } = useAdminTrail();
 
-  const [selectedTrail, setSelectedTrail] = useState(null);
-  const [date, setDate] = useState();
-  const [requirements, setRequirements] = useState([]);
-  const [newRequirement, setNewRequirement] = useState("");
+  const [tags, setTags] = useState([]);
+  const [newTag, setNewTag] = useState("");
   const [formData, setFormData] = useState({
-    title: "",
+    name: "",
     description: "",
-    maxSize: 6,
-    meetingPoint: "",
-    image: null,
+    location: "",
+    privacy: "public",
+    coverImage: null,
   });
 
   const handleInputChange = (e) => {
@@ -58,27 +39,26 @@ export function CreateGroupForm({ user, onSuccess }) {
     }));
   };
 
+  const handlePrivacyChange = (value) => {
+    setFormData((prev) => ({ ...prev, privacy: value }));
+  };
+
   const handleImageChange = (e) => {
     if (e.target.files[0]) {
-      setFormData((prev) => ({ ...prev, image: e.target.files[0] }));
+      setFormData((prev) => ({ ...prev, coverImage: e.target.files[0] }));
     }
   };
 
-  const handleTrailSelect = (trailId) => {
-    const trail = availableTrails.find((t) => t._id === trailId);
-    setSelectedTrail(trail);
-  };
-
-  const addRequirement = () => {
-    const trimmed = newRequirement.trim();
-    if (trimmed && !requirements.includes(trimmed)) {
-      setRequirements([...requirements, trimmed]);
-      setNewRequirement("");
+  const addTag = () => {
+    const trimmed = newTag.trim();
+    if (trimmed && !tags.includes(trimmed)) {
+      setTags([...tags, trimmed]);
+      setNewTag("");
     }
   };
 
-  const removeRequirement = (req) => {
-    setRequirements(requirements.filter((r) => r !== req));
+  const removeTag = (tag) => {
+    setTags(tags.filter((t) => t !== tag));
   };
 
   const handleSubmit = async (e) => {
@@ -89,31 +69,35 @@ export function CreateGroupForm({ user, onSuccess }) {
       return;
     }
 
-    if (!selectedTrail || !date) {
-      toast.error("Please select a trail and date");
+    if (!formData.name || !formData.description) {
+      toast.error("Please fill in the required fields");
       return;
     }
 
     const submissionData = new FormData();
-    submissionData.append("title", formData.title);
+    submissionData.append("name", formData.name);
     submissionData.append("description", formData.description);
-    submissionData.append("maxSize", formData.maxSize);
-    submissionData.append("date", date.toISOString());
-    submissionData.append("trail", selectedTrail._id);
-    submissionData.append("meetingPoint", formData.meetingPoint);
-    if (formData.image) {
-      submissionData.append("image", formData.image);
+    submissionData.append("location", formData.location);
+    submissionData.append("privacy", formData.privacy);
+    
+    // Append tags as individual array items if backend expects array, 
+    // or as a comma-separated string if backend handles it that way.
+    // Mongoose array [String] usually works fine with duplicate keys in FormData in some middlewares,
+    // but safer to loop.
+    tags.forEach((tag) => submissionData.append("tags[]", tag));
+
+    if (formData.coverImage) {
+      submissionData.append("coverImage", formData.coverImage);
     }
-    requirements.forEach((req) => submissionData.append("requirements[]", req));
 
     createGroup(submissionData, {
       onSuccess: () => {
         toast.success("Group created successfully!");
-        onSuccess?.(); 
-        navigate("/groups");
+        onSuccess?.();
+        navigate("/community/groups");
       },
       onError: (error) => {
-        toast.error("Failed to create group");
+        toast.error(error.response?.data?.message || "Failed to create group");
         console.error(error);
       },
     });
@@ -121,97 +105,136 @@ export function CreateGroupForm({ user, onSuccess }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <Label>Title</Label>
-        <Input name="title" value={formData.title} onChange={handleInputChange} />
-      </div>
-
-      <div>
-        <Label>Description</Label>
-        <Textarea name="description" value={formData.description} onChange={handleInputChange} />
-      </div>
-
-      <div>
-        <Label>Meeting Point</Label>
-        <Input name="meetingPoint" value={formData.meetingPoint} onChange={handleInputChange} />
-      </div>
-
-      <div>
-        <Label>Max Group Size</Label>
-        <Input
-          name="maxSize"
-          type="number"
-          value={formData.maxSize}
+      
+      {/* Group Name */}
+      <div className="space-y-2">
+        <Label htmlFor="name">Group Name</Label>
+        <Input 
+          id="name"
+          name="name" 
+          placeholder="e.g. Kathmandu Weekend Hikers" 
+          value={formData.name} 
           onChange={handleInputChange}
-          min={1}
+          required 
         />
       </div>
 
-      <div>
-        <Label>Trail</Label>
-        <Select onValueChange={handleTrailSelect}>
-          <SelectTrigger>
-            <SelectValue placeholder="Choose a trail" />
-          </SelectTrigger>
-          <SelectContent>
-            {availableTrails.map((trail) => (
-              <SelectItem key={trail._id} value={trail._id}>
-                {trail.name} - {trail.location}
+      {/* Description */}
+      <div className="space-y-2">
+        <Label htmlFor="description">Description</Label>
+        <Textarea 
+          id="description"
+          name="description" 
+          placeholder="What is this group about?" 
+          value={formData.description} 
+          onChange={handleInputChange}
+          className="min-h-[100px]"
+          required
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Location */}
+        <div className="space-y-2">
+          <Label htmlFor="location">Location (Optional)</Label>
+          <div className="relative">
+            <MapPin className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+            <Input 
+              id="location"
+              name="location" 
+              placeholder="e.g. Thamel, Kathmandu" 
+              value={formData.location} 
+              onChange={handleInputChange}
+              className="pl-9"
+            />
+          </div>
+        </div>
+
+        {/* Privacy */}
+        <div className="space-y-2">
+          <Label htmlFor="privacy">Privacy</Label>
+          <Select value={formData.privacy} onValueChange={handlePrivacyChange}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="public">
+                <div className="flex items-center gap-2">
+                  <Globe className="h-4 w-4" /> <span>Public</span>
+                </div>
               </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+              <SelectItem value="private">
+                <div className="flex items-center gap-2">
+                  <Lock className="h-4 w-4" /> <span>Private</span>
+                </div>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <div>
-        <Label>Date</Label>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" className={cn("w-full justify-start", !date && "text-muted-foreground")}>
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {date ? format(date, "PPP") : "Pick a date"}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0">
-            <Calendar mode="single" selected={date} onSelect={setDate} />
-          </PopoverContent>
-        </Popover>
-      </div>
-
-      <div>
-        <Label>Image</Label>
-        <Input type="file" accept="image/*" onChange={handleImageChange} />
-      </div>
-
-      <div>
-        <Label>Requirements</Label>
+      {/* Tags */}
+      <div className="space-y-2">
+        <Label>Tags</Label>
         <div className="flex gap-2">
-          <Input
-            value={newRequirement}
-            onChange={(e) => setNewRequirement(e.target.value)}
-            placeholder="Add a requirement"
-          />
-          <Button type="button" onClick={addRequirement}>
+          <div className="relative flex-1">
+            <Hash className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+            <Input
+              value={newTag}
+              onChange={(e) => setNewTag(e.target.value)}
+              placeholder="Add tags (e.g. beginner, nature)"
+              className="pl-9"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  addTag();
+                }
+              }}
+            />
+          </div>
+          <Button type="button" onClick={addTag} variant="secondary">
             Add
           </Button>
         </div>
         <div className="flex flex-wrap gap-2 mt-2">
-          {requirements.map((req) => (
-            <span
-              key={req}
-              className="bg-gray-200 px-2 py-1 rounded flex items-center"
-            >
-              {req}
+          {tags.map((tag) => (
+            <Badge key={tag} variant="secondary" className="px-3 py-1 flex items-center gap-1">
+              {tag}
               <X
-                className="ml-1 cursor-pointer w-4 h-4 text-red-500"
-                onClick={() => removeRequirement(req)}
+                className="cursor-pointer w-3 h-3 hover:text-red-500"
+                onClick={() => removeTag(tag)}
               />
-            </span>
+            </Badge>
           ))}
         </div>
       </div>
 
-      <div className="flex gap-4">
+      {/* Cover Image */}
+      <div className="space-y-2">
+        <Label>Cover Image</Label>
+        <div className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 transition-colors relative">
+           <Input 
+            type="file" 
+            accept="image/*" 
+            onChange={handleImageChange} 
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          />
+          {formData.coverImage ? (
+             <div className="flex items-center gap-2 text-green-600">
+               <Upload className="h-6 w-6" />
+               <span className="font-medium">{formData.coverImage.name}</span>
+             </div>
+          ) : (
+            <>
+              <Upload className="h-8 w-8 text-gray-400 mb-2" />
+              <p className="text-sm text-gray-500">Click to upload cover image</p>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex gap-4 pt-4">
         <Button
           type="button"
           variant="outline"
@@ -220,8 +243,8 @@ export function CreateGroupForm({ user, onSuccess }) {
         >
           Cancel
         </Button>
-        <Button type="submit" className="flex-1" disabled={isLoading}>
-          {isLoading ? "Creating..." : "Create Group"}
+        <Button type="submit" className="flex-1 bg-green-600 hover:bg-green-700" disabled={isLoading}>
+          {isLoading ? "Creating Group..." : "Create Group"}
         </Button>
       </div>
     </form>

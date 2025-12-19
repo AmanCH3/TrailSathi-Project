@@ -1,9 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useGroup } from "../hooks/useGroup";
 import { GroupCard } from "../components/user_group_management/group_card";
 import { GroupDetails } from "../components/user_group_management/group_detail";
 import { CreateGroupForm } from "../components/user_group_management/create_group_form";
-import { useAuth } from '@app/providers/AuthProvider';
+import { useAuth } from '../app/providers/AuthProvider';
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,8 +16,11 @@ import {
 } from "@/components/ui/dialog";
 
 export default function GroupsPage() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { group: allGroups, isLoading } = useGroup();
+
+  console.log("GroupsPage Rendered. User:", user);
 
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [createGroupOpen, setCreateGroupOpen] = useState(false);
@@ -25,6 +29,8 @@ export default function GroupsPage() {
   if (isLoading) {
     return <p>Loading...</p>;
   }
+  
+  // ... pagination logic ...
 
   const groupsPerPage = 6;
   const totalPages = Math.ceil(allGroups.length / groupsPerPage);
@@ -60,12 +66,23 @@ export default function GroupsPage() {
             Join existing hiking groups or create your own
           </p>
         </div>
+        
+        {/* Debug: Force button rendering check */}
+        <Button 
+          className="bg-green-600 text-white hover:bg-green-700"
+          onClick={() => {
+            console.log("Create Group Clicked. Subscription:", user?.subscription);
+            if (!['Pro', 'Premium'].includes(user?.subscription)) {
+              navigate('/payments');
+              return;
+            }
+            setCreateGroupOpen(true);
+          }}
+        >
+          + Create Group
+        </Button>
+
         <Dialog open={createGroupOpen} onOpenChange={setCreateGroupOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-green-600 text-white hover:bg-green-700">
-              + Create Group
-            </Button>
-          </DialogTrigger>
           <DialogContent className="max-w-3xl p-6">
             <DialogHeader>
               <DialogTitle>Create a New Hiking Group</DialogTitle>

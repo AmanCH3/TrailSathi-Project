@@ -211,7 +211,13 @@ import {
   Check,
   X,
 } from "lucide-react";
-import { useRequestToJoinGroup , useApproveJoinRequest , useDenyJoinRequest } from "../../hooks/useGroup";
+import { 
+    useRequestToJoinGroup, 
+    useApproveJoinRequest, 
+    useDenyJoinRequest,
+    useDeleteOneGroup 
+} from "../../hooks/useGroup";
+import { toast } from "react-toastify";
 import { JoinGroupDialog } from "./join_group_dailog";
 import { GroupChat } from "./group_chat";
 
@@ -247,7 +253,8 @@ export function GroupDetails({ group, user }) {
   
   const requestJoinMutation = useRequestToJoinGroup(); 
   const approveMutation = useApproveJoinRequest(); 
-  const denyMutation = useDenyJoinRequest(); 
+  const denyMutation = useDenyJoinRequest();
+  const deleteGroupMutation = useDeleteOneGroup(); 
   
   const {
     _id : groupId,
@@ -255,15 +262,15 @@ export function GroupDetails({ group, user }) {
     description,
     date,
     maxSize,
-    leader, // leader will be populated User object
-    participants = [], // participants array from model
-    status, // status from model
-    meetingPoint, // meetingPoint from model
-    requirements = [], // requirements from model
-    difficulty, // difficulty from model
-    photos = [], // photos from model
-    comments = [], // comments from model
-    trail, // trail will be populated Trail object
+    leader, 
+    participants = [], 
+    status, 
+    meetingPoint, 
+    requirements = [], 
+    difficulty, 
+    photos = [], 
+    comments = [], 
+    trail, 
   } = group;
 
   const displayTime = new Date(date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
@@ -289,6 +296,19 @@ export function GroupDetails({ group, user }) {
   const handleApprove = (requestId) => approveMutation.mutate({ groupId, requestId });
   const handleDeny = (requestId) => denyMutation.mutate({groupId, requestId });
 
+  const handleDeleteGroup = async () => {
+    if(confirm("Are you sure you want to delete this group? This cannot be undone.")) {
+        deleteGroupMutation.mutate(groupId, {
+            onSuccess: () => {
+                 toast.success("Group deleted successfully");
+                 // Close modal if prop provided, navigation handled by query invalidation usually
+                 // but strictly speaking we might want to navigate explicitly if on a detail page
+                 if (user) window.location.href = '/community/groups'; // Simple redirect fallback
+            }
+        });
+    }
+  };
+
    const canViewChat = isCurrentUserLeader || isCurrentUserConfirmedParticipant;
 
   return (
@@ -297,7 +317,7 @@ export function GroupDetails({ group, user }) {
         open={isJoinDialogOpen}
         setOpen={setJoinDialogOpen}
         groupTitle={group.title}
-        onJoin={handleSendJoinRequest} // Pass the new handler
+        onJoin={handleSendJoinRequest} 
       />
 
      
@@ -326,7 +346,20 @@ export function GroupDetails({ group, user }) {
                 <Badge className="w-full justify-center py-2 text-lg bg-blue-100 text-red-500">You are a participant!</Badge>
             )}
             {isCurrentUserLeader && (
-                <Badge className="w-full justify-center py-2 text-lg bg-blue-50 text-purple-800">You are the leader!</Badge>
+                <div className="space-y-3">
+                    <Badge className="w-full justify-center py-2 text-lg bg-blue-50 text-purple-800">You are the leader!</Badge>
+                    <div className="grid grid-cols-2 gap-3 pt-2">
+                         <Button variant="outline" className="w-full border-blue-200 text-blue-700 hover:bg-blue-50" onClick={() => toast.info("Edit Group Modal coming soon!")}>
+                            Edit Group
+                         </Button>
+                         <Button variant="outline" className="w-full border-green-200 text-green-700 hover:bg-green-50" onClick={() => toast.info("Create Event Modal coming soon!")}>
+                            Create Event
+                         </Button>
+                         <Button variant="destructive" className="w-full col-span-2" onClick={handleDeleteGroup} disabled={deleteGroupMutation.isPending}>
+                            {deleteGroupMutation.isPending ? "Deleting..." : "Delete Group"}
+                         </Button>
+                    </div>
+                </div>
             )}
           </CardContent>
         </Card>

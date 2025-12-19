@@ -35,17 +35,17 @@ const messageController = require('../controllers/messageController');
 
 // Public routes (or partially protected)
 router.route('/')
-    .get(groupController.getAllGroups)
-    .post(authMiddleware.protect, groupController.createGroup);
+    .get(authMiddleware.checkUser, groupController.getAllGroups)
+    .post(authMiddleware.protect, groupController.uploadGroupImages, groupController.createGroup);
 
 router.route('/:groupId')
-    .get(authMiddleware.protect, groupController.getGroup) // Protected to see details? or Public? Requirement says "Return full group detail". 
-    .put(authMiddleware.protect, groupController.updateGroup) // owner/admin
+    .get(authMiddleware.protect, groupController.getGroup) 
+    .put(authMiddleware.protect, groupController.uploadGroupImages, groupController.updateGroup) // owner/admin
     .delete(authMiddleware.protect, groupController.deleteGroup); // owner
 
 // Membership Routes
 router.post('/:groupId/join', authMiddleware.protect, membershipController.joinGroup);
-router.post('/:groupId/leave', authMiddleware.protect, membershipController.leaveGroup);
+router.delete('/:groupId/leave', authMiddleware.protect, membershipController.leaveGroup);
 router.get('/:groupId/members', authMiddleware.protect, membershipController.getGroupMembers);
 
 // Group Chat Routes

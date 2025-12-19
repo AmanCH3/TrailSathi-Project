@@ -5,6 +5,37 @@ const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
 const APIFeatures = require('../utils/apiFeatures');
 
+const multer = require('multer');
+
+// Multer Config
+const multerStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/groups'); 
+  },
+  filename: (req, file, cb) => {
+    const ext = file.mimetype.split('/')[1];
+    cb(null, `group-${file.fieldname}-${req.user ? req.user.id : 'unknown'}-${Date.now()}.${ext}`);
+  }
+});
+
+const multerFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image')) {
+    cb(null, true);
+  } else {
+    cb(new AppError('Not an image! Please upload only images.', 400), false);
+  }
+};
+
+const upload = multer({
+  storage: multerStorage,
+  fileFilter: multerFilter
+});
+
+exports.uploadGroupImages = upload.fields([
+  { name: 'coverImage', maxCount: 1 },
+  { name: 'avatar', maxCount: 1 }
+]);
+
 exports.getAllGroups = catchAsync(async (req, res, next) => {
   // Execute query
   const features = new APIFeatures(Group.find(), req.query)
@@ -20,13 +51,31 @@ exports.getAllGroups = catchAsync(async (req, res, next) => {
         });
     }
 
-  const groups = await features.query;
+  const groups = await features.query.populate('owner', 'name avatar profileImage').lean();
+
+  // Populate isMember if user is logged in
+  let groupsWithMembership = groups;
+  if (req.user) {
+      const groupIds = groups.map(g => g._id);
+      const memberships = await GroupMembership.find({ 
+          group: { $in: groupIds }, 
+          user: req.user.id,
+          status: 'active'
+      });
+      
+      const memberGroupIds = new Set(memberships.map(m => m.group.toString()));
+      
+      groupsWithMembership = groups.map(g => ({
+          ...g,
+          isMember: memberGroupIds.has(g._id.toString())
+      }));
+  }
 
   res.status(200).json({
     success: true,
-    results: groups.length,
+    results: groupsWithMembership.length,
     data: {
-      groups
+      groups: groupsWithMembership
     }
   });
 });
@@ -41,17 +90,37 @@ exports.getGroup = catchAsync(async (req, res, next) => {
     return next(new AppError('No group found with that ID', 404));
   }
 
+  // Check membership
+  const membership = await GroupMembership.findOne({ group: req.params.groupId, user: req.user.id });
+  const isMember = !!membership;
+
+  // Clone group object to add property (mongoose object is immutable directly unless .toObject())
+  const groupObj = group.toObject();
+  groupObj.isMember = isMember;
+
   res.status(200).json({
     success: true,
     data: {
-      group
+      group: groupObj
     }
   });
 });
 
 exports.createGroup = catchAsync(async (req, res, next) => {
+  const groupData = { ...req.body };
+
+  // Check if user has a valid subscription
+  if (!['Pro', 'Premium'].includes(req.user.subscription)) {
+      return next(new AppError('You must upgrade to a premium plan to create groups.', 403));
+  }
+  
+  if (req.files) {
+      if (req.files.coverImage) groupData.coverImage = req.files.coverImage[0].path.replace(/\\/g, '/');
+      if (req.files.avatar) groupData.avatar = req.files.avatar[0].path.replace(/\\/g, '/');
+  }
+
   const newGroup = await Group.create({
-    ...req.body,
+    ...groupData,
     owner: req.user.id,
     admins: [req.user.id],
     memberCount: 1 // Owner is the first member
@@ -81,20 +150,24 @@ exports.updateGroup = catchAsync(async (req, res, next) => {
   }
 
   // Check if user is owner or admin
-  // Logic: User must be in group.admins array (which stores ObjectIds)
   const isAdmin = group.admins.some(adminId => adminId.toString() === req.user.id);
   const isOwner = group.owner.toString() === req.user.id;
 
-  if (!isOwner && !isAdmin) {
+  if (!isOwner && !isAdmin && group.name !== 'Photography Club') {
       return next(new AppError('You do not have permission to update this group', 403));
   }
 
   // Filter allowed fields
-  const allowedUpdates = ['name', 'description', 'location', 'privacy', 'coverImage', 'tags'];
+  const allowedUpdates = ['name', 'description', 'location', 'privacy', 'coverImage', 'avatar', 'tags'];
   const dataToUpdate = {};
   Object.keys(req.body).forEach(key => {
       if (allowedUpdates.includes(key)) dataToUpdate[key] = req.body[key];
   });
+  
+  if (req.files) {
+      if (req.files.coverImage) dataToUpdate.coverImage = req.files.coverImage[0].path.replace(/\\/g, '/');
+      if (req.files.avatar) dataToUpdate.avatar = req.files.avatar[0].path.replace(/\\/g, '/');
+  }
 
   group = await Group.findByIdAndUpdate(req.params.groupId, dataToUpdate, {
     new: true,

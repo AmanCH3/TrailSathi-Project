@@ -13,6 +13,35 @@ const checkMembership = async (groupId, userId) => {
     return !!membership;
 };
 
+const multer = require('multer');
+
+// Multer Config
+const multerStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    // Ensure this directory exists or using a shared uploads folder
+    cb(null, 'uploads/posts'); 
+  },
+  filename: (req, file, cb) => {
+    const ext = file.mimetype.split('/')[1];
+    cb(null, `post-${req.user ? req.user.id : 'unknown'}-${Date.now()}.${ext}`);
+  }
+});
+
+const multerFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image')) {
+    cb(null, true);
+  } else {
+    cb(new AppError('Not an image! Please upload only images.', 400), false);
+  }
+};
+
+const upload = multer({
+  storage: multerStorage,
+  fileFilter: multerFilter
+});
+
+exports.uploadPostImages = upload.array('images', 5);
+
 exports.getAllPosts = catchAsync(async (req, res, next) => {
     const { groupId } = req.params;
     
@@ -41,17 +70,31 @@ exports.getAllPosts = catchAsync(async (req, res, next) => {
 
     const posts = await features.query
         .populate('author', 'name profileImage')
-        .populate('group', 'name');
+        .populate('group', 'name')
+        .lean();
 
-    // Check if current user liked these posts?
-    // This is often heavy. Frontend might query likes separately or we aggregate.
-    // Simple way: just return posts.
+    // Check if current user liked these posts
+    let postsWithLikes = posts;
+    if (req.user) {
+        const postIds = posts.map(p => p._id);
+        const likes = await PostLike.find({ 
+            post: { $in: postIds }, 
+            user: req.user.id 
+        });
+
+        const likedPostIds = new Set(likes.map(l => l.post.toString()));
+        
+        postsWithLikes = posts.map(p => ({
+            ...p,
+            isLiked: likedPostIds.has(p._id.toString())
+        }));
+    }
 
     res.status(200).json({
         success: true,
-        results: posts.length,
+        results: postsWithLikes.length,
         data: {
-            posts
+            posts: postsWithLikes
         }
     });
 });
@@ -65,8 +108,19 @@ exports.createPost = catchAsync(async (req, res, next) => {
         return next(new AppError('Only group members can post.', 403));
     }
 
+    // Handle files
+    let images = [];
+    if (req.files) {
+        images = req.files.map(file => file.path.replace(/\\/g, '/'));
+    }
+    
+    // Handle field name mismatch just in case (frontend sends 'text', model wants 'content')
+    const content = req.body.content || req.body.text;
+
     const newPost = await Post.create({
-        ...req.body,
+        content, // explicitly set content
+        images,
+        trailName: req.body.trailName,
         group: groupId,
         author: req.user.id
     });
