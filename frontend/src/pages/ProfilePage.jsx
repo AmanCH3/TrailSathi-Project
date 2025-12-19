@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle, User, TrendingUp, Users, Mountain } from 'lucide-react'; 
+import { AlertCircle, User, TrendingUp, Users, Mountain, Trophy } from 'lucide-react'; 
 import Navbar from '../components/layout/Header';
 import Footer from '../layouts/Footer';
 import { ProfileInfo } from '../components/profile/ProfileInfo';
@@ -10,6 +10,7 @@ import { HikingStats } from '../components/profile/HikingStats';
 import { EditProfileDialog } from '../components/profile/EditProfileDialog';
 import { UserGroupsTab } from '../components/profile/UseGroupTab';
 import { MyTrailsTab } from '../components/profile/MyTrailsTab'; 
+import { AchievementsTab } from '../components/profile/AchievementsTab'; 
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState('profile');
@@ -85,6 +86,7 @@ export default function ProfilePage() {
               <TabButton id="trails" label="My Trails" icon={Mountain} isActive={activeTab === 'trails'} onClick={setActiveTab} />
               <TabButton id="stats" label="Hiking Stats" icon={TrendingUp} isActive={activeTab === 'stats'} onClick={setActiveTab} />
               <TabButton id="groups" label="Groups" icon={Users} isActive={activeTab === 'groups'} onClick={setActiveTab} />
+              <TabButton id="achievements" label="Achievements" icon={Trophy} isActive={activeTab === 'achievements'} onClick={setActiveTab} />
             </div>
 
             {/* Tab Content */}
@@ -124,6 +126,9 @@ export default function ProfilePage() {
 
               {/* --- Groups Tab --- */}
               {activeTab === 'groups' && <UserGroupsTab groups={user.groups} user={user} />}
+              
+              {/* --- Achievements Tab --- */}
+              {activeTab === 'achievements' && <AchievementsTab user={user} />}
             </div>
           </div>
         </main>

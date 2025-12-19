@@ -9,6 +9,7 @@ const API_URL = ENV.API_URL;
 
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { NotificationDropdown } from "./NotificationDropdown";
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
@@ -70,7 +71,11 @@ export default function Header() {
              </div>
 
              {isAuthenticated ? (
-                 <div className="flex items-center gap-4 pl-2">
+             <div className="flex items-center gap-4 pl-2">
+                 
+                 {/* Notification Bell */}
+                 <NotificationDropdown />
+                 
                     <Link to="/profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                         <Avatar className="h-9 w-9 border border-gray-200">
                             <AvatarImage src={user.profileImage ? `${API_URL}/${user.profileImage}` : ''} alt={user.name} />
