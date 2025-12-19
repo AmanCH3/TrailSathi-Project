@@ -1,111 +1,148 @@
 // src/components/admin/trail_management/ViewTrailDailog.jsx
 "use client";
 
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { MapPin, Clock, Mountain, Zap, Star } from "lucide-react";
+import { MapPin, Clock, Mountain, Zap, Star, X } from "lucide-react";
 
-// Helper to get difficulty color (can be moved to a utils file)
+// Utils
 const getDifficultyColor = (difficulty) => {
-  if (!difficulty) return "bg-gray-100 text-gray-800";
+  if (!difficulty) return "bg-gray-100 text-gray-800 border-gray-200";
   switch (difficulty.toLowerCase()) {
-    case "easy": return "bg-green-100 text-green-800";
-    case "moderate": return "bg-yellow-100 text-yellow-800";
-    case "difficult": return "bg-red-100 text-red-800";
-    default: return "bg-gray-100 text-gray-800";
+    case "easy": return "bg-emerald-50 text-emerald-700 border-emerald-200";
+    case "moderate": return "bg-amber-50 text-amber-700 border-amber-200";
+    case "difficult": return "bg-red-50 text-red-700 border-red-200";
+    default: return "bg-gray-50 text-gray-700 border-gray-200";
   }
 };
 
-export function ViewTrailDialog({ open, onOpenChange, trail }) {
+export function ViewTrailDialog({ open, onOpenChange, trail, customAction }) {
   if (!trail) return null;
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const SERVER_ROOT_URL = API_BASE_URL ? API_BASE_URL.replace('/api', '') : 'http://localhost:5050';
 
   const getFullImageUrl = (path) => {
-    if (!path) {
-      return "https://dk2dv4ezy246u.cloudfront.net/widgets/sMRhRDPDTxK7_large.jpg";
-    }
-    if (path.startsWith('http://') || path.startsWith('https://')) {
-      return path;
-    }
+    if (!path) return "https://images.unsplash.com/photo-1551632811-561732d1e306?q=80&w=2070&auto=format&fit=crop"; // Premium fallback
+    if (path.startsWith('http')) return path;
     return `${SERVER_ROOT_URL}/${path.replace(/\\/g, '/')}`;
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl">{trail.name}</DialogTitle>
-          <DialogDescription className="flex items-center gap-2">
-            <MapPin className="h-4 w-4" />
-            Location: {trail.location || 'N/A'}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-6 py-4">
-          
-          {trail.images && trail.images.length > 0 && (
-            <div className="relative h-64 w-full rounded-lg overflow-hidden bg-gray-200">
-              <img 
-                src={getFullImageUrl(trail.images[0])} 
-                alt={trail.name} 
-                className="absolute h-full w-full object-cover" 
-              />
-            </div>
-          )}
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-50">
-              <Label className="text-xs text-muted-foreground flex items-center gap-1"><Zap className="h-3 w-3" /> Difficulty</Label>
-              <Badge className={`mt-1 text-sm ${getDifficultyColor(trail.difficult)}`}>{trail.difficult || 'N/A'}</Badge>
-            </div>
-             <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-50">
-              <Label className="text-xs text-muted-foreground flex items-center gap-1"><Star className="h-3 w-3" /> Distance</Label>
-              <p className="text-lg font-bold">{trail.distance ? `${trail.distance} km` : 'N/A'}</p>
-            </div>
-            <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-50">
-              <Label className="text-xs text-muted-foreground flex items-center gap-1"><Mountain className="h-3 w-3" /> Elevation</Label>
-              <p className="text-lg font-bold">{trail.elevation ? `${trail.elevation} m` : 'N/A'}</p>
-            </div>
-            <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-50">
-              <Label className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" /> Duration</Label>
-              <p className="text-lg font-bold">{`${trail.duration?.min || '?'} - ${trail.duration?.max || '?'} hrs`}</p>
-            </div>
-          </div>
-          
-          <div>
-            <Label className="text-sm font-semibold">Description</Label>
-            <p className="mt-1 text-muted-foreground text-base">{trail.description || 'No description available.'}</p>
-          </div>
+      <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden border-none shadow-2xl bg-white sm:rounded-2xl">
+        
+        {/* --- Hero Image Section --- */}
+        <div className="relative h-64 w-full">
+           <img 
+             src={trail.images && trail.images.length > 0 ? getFullImageUrl(trail.images[0]) : getFullImageUrl(null)} 
+             alt={trail.name} 
+             className="h-full w-full object-cover"
+           />
+           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+           
+           <DialogClose className="absolute top-4 right-4 p-2 bg-black/20 hover:bg-black/40 text-white rounded-full transition-colors backdrop-blur-md border border-white/10">
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+           </DialogClose>
 
-          {trail.features && trail.features.length > 0 && (
-            <div>
-              <Label className="text-sm font-semibold">Features</Label>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {trail.features.map((feature) => (
-                  <Badge key={feature} variant="secondary">{feature}</Badge>
-                ))}
+           <div className="absolute bottom-0 left-0 p-6 w-full">
+              <Badge className={`mb-3 border-0 ${getDifficultyColor(trail.difficulty).replace('bg-', 'bg-white/90 ').replace('text-', 'text-black ')} backdrop-blur-sm`}>
+                 {trail.difficulty || 'Moderate'}
+              </Badge>
+              <DialogTitle className="text-3xl font-bold text-white tracking-tight leading-tight mb-1 font-display">
+                {trail.name}
+              </DialogTitle>
+              <div className="flex items-center text-white/90 text-sm font-medium">
+                <MapPin className="h-4 w-4 mr-1.5 text-white/70" />
+                {trail.location || 'Unknown Location'}
               </div>
-            </div>
-          )}
-
-          {trail.seasons && trail.seasons.length > 0 && (
-            <div>
-              <Label className="text-sm font-semibold">Best Seasons</Label>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {trail.seasons.map((season) => (
-                  <Badge key={season} variant="outline">{season}</Badge>
-                ))}
-              </div>
-            </div>
-          )}
+           </div>
         </div>
-        {/* --- JOIN BUTTON ADDED --- */}
-        <DialogFooter>
-            <Button className="w-full" onClick={() => alert('Join Trail Logic Here!')}>Join Here</Button>
-        </DialogFooter>
+
+        {/* --- Stats Grid --- */}
+        <div className="grid grid-cols-3 border-b border-gray-100 divide-x divide-gray-100 bg-gray-50/50">
+            <div className="p-4 text-center group hover:bg-white transition-colors">
+                <div className="flex items-center justify-center gap-1.5 text-gray-400 mb-1 group-hover:text-amber-500 transition-colors">
+                    <Star className="h-4 w-4" />
+                    <span className="text-xs font-semibold uppercase tracking-wider">Distance</span>
+                </div>
+                <p className="text-lg font-bold text-gray-900">{trail.length ? `${trail.length} km` : '-'}</p>
+            </div>
+            <div className="p-4 text-center group hover:bg-white transition-colors">
+                <div className="flex items-center justify-center gap-1.5 text-gray-400 mb-1 group-hover:text-emerald-500 transition-colors">
+                    <Mountain className="h-4 w-4" />
+                    <span className="text-xs font-semibold uppercase tracking-wider">Elevation</span>
+                </div>
+                <p className="text-lg font-bold text-gray-900">{trail.elevationGain ? `${trail.elevationGain} m` : '-'}</p>
+            </div>
+            <div className="p-4 text-center group hover:bg-white transition-colors">
+                 <div className="flex items-center justify-center gap-1.5 text-gray-400 mb-1 group-hover:text-blue-500 transition-colors">
+                    <Clock className="h-4 w-4" />
+                    <span className="text-xs font-semibold uppercase tracking-wider">Duration</span>
+                </div>
+                <p className="text-lg font-bold text-gray-900">{trail.duration ? `${trail.duration} hrs` : '-'}</p>
+            </div>
+        </div>
+
+        {/* --- Content Body --- */}
+        <div className="p-6 space-y-6">
+            
+            {/* Description */}
+            <div className="space-y-3">
+               <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wide">About this trail</h4>
+               <p className="text-gray-600 leading-relaxed text-[15px]">
+                  {trail.description || 'No detailed description available for this trail yet. Start exploring to find out more!'}
+               </p>
+            </div>
+
+            {/* Features & Tags */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                 {trail.features && trail.features.length > 0 && (
+                    <div className="space-y-3">
+                        <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Highlights</h4>
+                        <div className="flex flex-wrap gap-2">
+                           {trail.features.map(feature => (
+                               <span key={feature} className="px-2.5 py-1 bg-violet-50 text-violet-700 text-xs font-medium rounded-md border border-violet-100">
+                                  {feature}
+                               </span>
+                           ))}
+                        </div>
+                    </div>
+                 )}
+
+                 {trail.seasons && trail.seasons.length > 0 && (
+                    <div className="space-y-3">
+                        <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Best Seasons</h4>
+                         <div className="flex flex-wrap gap-2">
+                           {trail.seasons.map(season => (
+                               <span key={season} className="px-2.5 py-1 bg-orange-50 text-orange-700 text-xs font-medium rounded-md border border-orange-100">
+                                  {season}
+                               </span>
+                           ))}
+                        </div>
+                    </div>
+                 )}
+            </div>
+        </div>
+
+        {/* --- Footer --- */}
+        <div className="p-6 pt-0">
+             {customAction ? (
+                <Button 
+                    className="w-full h-12 text-base font-semibold shadow-lg shadow-green-200 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 transition-all rounded-xl" 
+                    onClick={customAction.onClick}
+                >
+                    {customAction.label}
+                </Button>
+            ) : (
+                <Button className="w-full h-12 text-base font-semibold rounded-xl bg-gray-900 text-white hover:bg-gray-800" onClick={() => alert('Default Join Action')}>
+                    Join This Trail
+                </Button>
+            )}
+        </div>
+
       </DialogContent>
     </Dialog>
   );

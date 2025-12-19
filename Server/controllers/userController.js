@@ -1,7 +1,35 @@
+const multer = require('multer');
 const User = require('./../models/user.model');
 const SoloHike = require('./../models/soloHike.model');
 const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
+const APIFeatures = require('./../utils/apiFeatures');
+
+// Multer Config for Profile Images
+const multerStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/users');
+  },
+  filename: (req, file, cb) => {
+    const ext = file.mimetype.split('/')[1];
+    cb(null, `user-${req.user.id}-${Date.now()}.${ext}`);
+  }
+});
+
+const multerFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image')) {
+    cb(null, true);
+  } else {
+    cb(new AppError('Not an image! Please upload only images.', 400), false);
+  }
+};
+
+const upload = multer({
+  storage: multerStorage,
+  fileFilter: multerFilter
+});
+
+exports.uploadUserPhoto = upload.single('profileImage');
 
 exports.filterObj = (obj, ...allowedFields) => {
   const newObj = {};
@@ -21,7 +49,7 @@ exports.getUser = catchAsync(async (req, res, next) => {
   const user = await User.findById(req.params.id)
     .populate({
       path: 'completedTrails.trail',
-      select: 'name location difficulty length'
+      select: 'name location difficulty length elevationGain duration'
     });
 
   if (!user) {
@@ -40,7 +68,8 @@ exports.getUser = catchAsync(async (req, res, next) => {
   userObj.joinedTrails = soloHikes.map(hike => ({
       trail: hike.trail,
       scheduledDate: hike.startDateTime,
-      soloHikeId: hike._id, // Adding ID for potential future use (cancelling etc)
+      _id: hike._id, // CHANGED from soloHikeId to _id for frontend compatibility
+      soloHikeId: hike._id, 
       status: hike.status
   }));
 
@@ -49,3 +78,45 @@ exports.getUser = catchAsync(async (req, res, next) => {
     data: userObj
   });
 });
+
+exports.updateMe = catchAsync(async (req, res, next) => {
+  // 1) Create error if user POSTs password data
+  if (req.body.password || req.body.passwordConfirm) {
+    return next(new AppError('This route is not for password updates. Please use /updateMyPassword.', 400));
+  }
+
+  // 2) Filtered out unwanted fields names that are not allowed to be updated
+  const filteredBody = exports.filterObj(req.body, 'name', 'email', 'bio', 'phone', 'emergencyContact', 'hikerType');
+  if (req.file) filteredBody.profileImage = req.file.path.replace(/\\/g, '/'); // Normalize path
+  if (req.body.profileImage) filteredBody.profileImage = req.body.profileImage;
+
+  // 3) Update user document
+  const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
+    new: true,
+    runValidators: true
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: updatedUser
+  });
+});
+
+exports.updateProfilePicture = catchAsync(async (req, res, next) => {
+    if (!req.file) {
+        return next(new AppError('Please provide an image', 400));
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(req.user.id, {
+        profileImage: req.file.path.replace(/\\/g, '/')
+    }, {
+        new: true,
+        runValidators: true
+    });
+
+    res.status(200).json({
+        status: 'success',
+        data: updatedUser
+    });
+});
+

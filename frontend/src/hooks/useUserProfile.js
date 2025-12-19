@@ -4,19 +4,19 @@ import { toast } from "react-toastify";
 
 // API function to get the current user's profile
 const fetchMyProfile = async () => {
-  const { data } = await axios.get("/user/me");
+  const { data } = await axios.get("/users/me");
   return data.data;
 };
 
 // API function to update the current user's profile
 const updateMyProfile = async (profileData) => {
-  const { data } = await axios.put("/user/me", profileData);
+  const { data } = await axios.put("/users/me", profileData);
   return data.data;
 };
 
 // ✅ ADDED: API function to update profile picture
 const updateMyProfilePicture = async (formData) => {
-  const { data } = await axios.put("/user/me/picture", formData, {
+  const { data } = await axios.put("/users/me/picture", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },

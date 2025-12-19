@@ -9,6 +9,8 @@ const router = express.Router();
 router.use(authController.protect);
 
 router.get('/me', userController.getMe, userController.getUser);
+router.put('/me', userController.getMe, userController.updateMe);
+router.put('/me/picture', userController.uploadUserPhoto, userController.updateProfilePicture);
 router.get('/dashboard', dashboardController.getMyDashboard);
 
 module.exports = router;

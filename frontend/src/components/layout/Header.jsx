@@ -8,9 +8,17 @@ import { ENV } from "@config/env";
 const API_URL = ENV.API_URL;
 
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
+  
+  // Helper to get initials
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  };
   
   return (
     <nav className="bg-gray-100/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 transition-all duration-300">
@@ -62,9 +70,16 @@ export default function Header() {
              </div>
 
              {isAuthenticated ? (
-                 <div className="flex items-center gap-3 pl-2">
-                    <span className="text-gray-900 font-semibold">{user.name}</span>
-                    <Button onClick={logout} variant="outline" size="sm" className="h-9 px-4 rounded-md">Logout</Button>
+                 <div className="flex items-center gap-4 pl-2">
+                    <Link to="/profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                        <Avatar className="h-9 w-9 border border-gray-200">
+                            <AvatarImage src={user.profileImage ? `${API_URL}/${user.profileImage}` : ''} alt={user.name} />
+                            <AvatarFallback className="bg-green-100 text-green-700 text-xs">{getInitials(user.name)}</AvatarFallback>
+                        </Avatar>
+                        <span className="text-gray-900 font-semibold">{user.name}</span>
+                    </Link>
+                    <div className="h-6 w-px bg-gray-300 mx-1"></div>
+                    <Button onClick={logout} variant="ghost" size="sm" className="h-9 px-3 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md">Logout</Button>
                  </div>
              ) : (
                  <Link to="/signup">

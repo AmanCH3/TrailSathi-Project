@@ -361,21 +361,49 @@ exports.joinTrailWithDate = catchAsync(async (req, res, next) => {
 });
 
 exports.completeTrail = catchAsync(async (req, res, next) => {
+  // 1. Update SoloHike status
   const soloHike = await SoloHike.findByIdAndUpdate(
     req.params.id, 
     { status: 'completed', endDateTime: Date.now() },
     { new: true }
-  );
+  ).populate('trail');
 
   if (!soloHike) {
     return next(new AppError('No scheduled hike found with that ID.', 404));
   }
 
+  // 2. Update User's Completed Trails and Stats
+  const user = await User.findById(req.user.id);
+  
+  // Add to completedTrails if not already there
+  const isAlreadyCompleted = user.completedTrails.some(ct => ct.trail.toString() === soloHike.trail._id.toString());
+  
+  if (!isAlreadyCompleted) {
+      user.completedTrails.push({
+          trail: soloHike.trail._id,
+          completedAt: Date.now()
+      });
+
+      // Update Stats
+      user.stats.totalHikes += 1;
+      user.stats.totalDistance += soloHike.trail.length || 0;
+      user.stats.totalElevation += soloHike.trail.elevationGain || 0;
+      user.stats.totalHours += soloHike.trail.duration || 0;
+  }
+
+  // Remove from joinedTrails (optional, depending on if you want to keep history)
+  // For now, let's keep it in joinedTrails but marked as completed in SoloHike source of truth
+  // unique handling via pull if needed:
+  user.joinedTrails = user.joinedTrails.filter(jt => jt.trail.toString() !== soloHike.trail._id.toString());
+
+  await user.save({ validateBeforeSave: false });
+
   res.status(200).json({
     status: 'success',
     message: 'Trail marked as complete!',
     data: {
-      soloHike
+      soloHike,
+      stats: user.stats
     }
   });
 });
