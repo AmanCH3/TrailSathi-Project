@@ -17,4 +17,6 @@ router.route('/:conversationId/messages')
     .get(messageController.getMessages)
     .post(messageController.sendMessage);
 
+router.put('/:conversationId/read', messageController.markAsRead);
+
 module.exports = router;

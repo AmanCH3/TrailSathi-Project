@@ -29,19 +29,34 @@ exports.getGroupEvents = catchAsync(async (req, res, next) => {
 
     const events = await features.query;
 
+    // Check RSVP status for each event if user is logged in
+    const eventsWithRSVP = await Promise.all(events.map(async (event) => {
+        const attendance = await EventAttendance.findOne({ event: event._id, user: req.user.id });
+        const eventObj = event.toObject();
+        eventObj.hasRSVPd = !!attendance;
+        eventObj.rsvpCount = eventObj.participantsCount || 0; // Ensure compatibility
+        return eventObj;
+    }));
+
     res.status(200).json({
         success: true,
-        results: events.length,
-        data: { events }
+        results: eventsWithRSVP.length,
+        data: { events: eventsWithRSVP }
     });
 });
+// Helper for strict owner check
+const checkGroupOwner = async (groupId, userId) => {
+    const membership = await GroupMembership.findOne({ group: groupId, user: userId });
+    return membership && membership.role === 'owner';
+};
 
 exports.createEvent = catchAsync(async (req, res, next) => {
     const { groupId } = req.params;
 
-    const isAdmin = await checkGroupAdmin(groupId, req.user.id);
-    if (!isAdmin) {
-        return next(new AppError('Only group admins/owners can create events.', 403));
+    // Strict Check: Only Owner can create events
+    const isOwner = await checkGroupOwner(groupId, req.user.id);
+    if (!isOwner) {
+        return next(new AppError('Only the group owner can create events.', 403));
     }
 
     const newEvent = await Event.create({
@@ -65,9 +80,14 @@ exports.getEvent = catchAsync(async (req, res, next) => {
 
     if (!event) return next(new AppError('Event not found', 404));
 
+    const attendance = await EventAttendance.findOne({ event: event._id, user: req.user.id });
+    const eventObj = event.toObject();
+    eventObj.hasRSVPd = !!attendance;
+    eventObj.rsvpCount = eventObj.participantsCount || 0;
+
     res.status(200).json({
         success: true,
-        data: { event }
+        data: { event: eventObj }
     });
 });
 

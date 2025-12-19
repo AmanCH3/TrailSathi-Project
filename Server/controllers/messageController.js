@@ -131,3 +131,13 @@ exports.sendGroupMessage = catchAsync(async (req, res, next) => {
         data: { message }
     });
 });
+
+exports.markAsRead = catchAsync(async (req, res, next) => {
+    const { conversationId } = req.params;
+    
+    await Conversation.findByIdAndUpdate(conversationId, {
+        $pull: { unreadBy: req.user.id }
+    });
+
+    res.status(200).json({ success: true, message: 'Marked as read' });
+});

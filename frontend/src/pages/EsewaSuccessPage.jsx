@@ -1,4 +1,4 @@
-import React, { useEffect, useContext } from 'react';
+import React, { useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'react-toastify'; // Adjust path if necessary
@@ -7,7 +7,7 @@ import { useAuth } from '../app/providers/AuthProvider';
 export default function EsewaSuccessPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { refreshUser } = useContext(AuthContext); // Get the new refresh function from our context
+  const { refreshUser } = useAuth(); // Get the new refresh function from our context using the hook
 
   useEffect(() => {
     // We create an async function inside useEffect to allow the use of 'await'

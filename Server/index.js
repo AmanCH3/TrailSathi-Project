@@ -94,12 +94,13 @@ app.use('/api/users', require('./routers/userRoutes'));
 app.use('/api/solo-hikes', require('./routers/soloHikeRoutes'));
 app.use('/api/notifications', require('./routers/notificationRoutes'));
 app.use('/api/achievements', require('./routers/achievementRoutes'));
-
+app.use('/api/payment' , require('./routers/paymentRoutes'))
 // New Routes
 app.use('/api/groups', require('./routers/groupRoutes'));
 app.use('/api/conversations', require('./routers/conversationRoutes'));
 app.use('/api/posts', require('./routers/postRoutes')); // For direct access/feeds
 app.use('/api/events', require('./routers/eventRoutes')); // For direct access/calendars
+
 
 app.all(/(.*)/, (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));

@@ -1,5 +1,5 @@
-import React, { useState, useContext } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
+import axiosInstance from '../../features/community/services/api/axios.config';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Check, X } from 'lucide-react';
@@ -54,7 +54,7 @@ const plansData = [
 
 export function SubscriptionPlans() {
   const [loadingPlan, setLoadingPlan] = useState(null);
-  const { user, isAuthenticated } = useContext(AuthContext);
+  const { user, isAuthenticated } = useAuth();
 
   const currentUserPlan = user?.subscription || 'Basic';
   const planIndex = { 'Basic': 0, 'Pro': 1, 'Premium': 2 };
@@ -68,12 +68,11 @@ export function SubscriptionPlans() {
 
     setLoadingPlan(plan.title);
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/payment/initiate`,
-        { plan: plan.title, amount: parseInt(plan.price, 10) },
-        { headers: { 'Authorization': `Bearer ${token}` } }
-      );
+      // Use configured axiosInstance which handles baseURL and Authorization header
+      const response = await axiosInstance.post('/api/payment/initiate', {
+        plan: plan.title,
+        amount: parseInt(plan.price, 10)
+      });
 
       if (response.data.success) {
         postToEsewa(response.data.data);

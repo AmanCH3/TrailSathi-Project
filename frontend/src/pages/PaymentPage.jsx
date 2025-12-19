@@ -27,7 +27,6 @@ export default function PaymentsPage() {
 
   return (
     <>
-      <Navbar />
       <div className="container mx-auto py-24 px-4">
         <h1 className="text-3xl font-bold mb-2 text-gray-900">Subscription & Billing</h1>
         <p className="text-gray-600 mb-8">Manage your plan and view your transaction history.</p>
