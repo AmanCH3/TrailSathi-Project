@@ -10,6 +10,17 @@ const API_URL = ENV.API_URL;
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NotificationDropdown } from "./NotificationDropdown";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { User, LogOut } from "lucide-react";
+
+import WeatherWidget from "../common/WeatherWidget";
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
@@ -73,18 +84,35 @@ export default function Header() {
              {isAuthenticated ? (
              <div className="flex items-center gap-4 pl-2">
                  
-                 {/* Notification Bell */}
                  <NotificationDropdown />
                  
-                    <Link to="/profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                        <Avatar className="h-9 w-9 border border-gray-200">
-                            <AvatarImage src={user.profileImage ? `${API_URL}/${user.profileImage}` : ''} alt={user.name} />
-                            <AvatarFallback className="bg-green-100 text-green-700 text-xs">{getInitials(user.name)}</AvatarFallback>
-                        </Avatar>
-                        <span className="text-gray-900 font-semibold">{user.name}</span>
-                    </Link>
-                    <div className="h-6 w-px bg-gray-300 mx-1"></div>
-                    <Button onClick={logout} variant="ghost" size="sm" className="h-9 px-3 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md">Logout</Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger className="focus:outline-none">
+                        <div className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer">
+                            <Avatar className="h-9 w-9 border border-gray-200">
+                                <AvatarImage src={user.profileImage ? `${API_URL}/${user.profileImage}` : ''} alt={user.name} />
+                                <AvatarFallback className="bg-green-100 text-green-700 text-xs">{getInitials(user.name)}</AvatarFallback>
+                            </Avatar>
+                            <span className="text-gray-900 font-semibold">{user.name}</span>
+                            <FaChevronDown className="text-gray-400 text-xs" />
+                        </div>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                            <Link to="/profile" className="cursor-pointer w-full flex items-center">
+                                <User className="mr-2 h-4 w-4" />
+                                <span>Profile</span>
+                            </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={logout} className="text-red-600 focus:text-red-600 cursor-pointer">
+                            <LogOut className="mr-2 h-4 w-4" />
+                            <span>Logout</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                  </div>
              ) : (
                  <Link to="/signup">
