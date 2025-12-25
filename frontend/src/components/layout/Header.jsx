@@ -26,6 +26,11 @@ export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
   
+  // Debugging user object
+  useEffect(() => {
+    console.log("Current User in Header:", user);
+  }, [user]);
+
   // Helper to get initials
   const getInitials = (name) => {
     if (!name) return 'U';
@@ -84,35 +89,57 @@ export default function Header() {
              {isAuthenticated ? (
              <div className="flex items-center gap-4 pl-2">
                  
-                 <NotificationDropdown />
-                 
-                    <DropdownMenu>
-                      <DropdownMenuTrigger className="focus:outline-none">
-                        <div className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer">
-                            <Avatar className="h-9 w-9 border border-gray-200">
-                                <AvatarImage src={user.profileImage ? `${API_URL}/${user.profileImage}` : ''} alt={user.name} />
-                                <AvatarFallback className="bg-green-100 text-green-700 text-xs">{getInitials(user.name)}</AvatarFallback>
-                            </Avatar>
-                            <span className="text-gray-900 font-semibold">{user.name}</span>
-                            <FaChevronDown className="text-gray-400 text-xs" />
-                        </div>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-56">
-                        <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem asChild>
-                            <Link to="/profile" className="cursor-pointer w-full flex items-center">
-                                <User className="mr-2 h-4 w-4" />
-                                <span>Profile</span>
-                            </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={logout} className="text-red-600 focus:text-red-600 cursor-pointer">
-                            <LogOut className="mr-2 h-4 w-4" />
-                            <span>Logout</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                 {user?.role === 'admin' ? (
+                   <>
+                      <Link to="/admin/dashboard">
+                        <Button 
+                          variant="ghost" 
+                          className="text-gray-600 hover:text-black hover:bg-transparent font-medium"
+                        >
+                          Admin Dashboard
+                        </Button>
+                      </Link>
+                      <Button 
+                        variant="ghost" 
+                        onClick={logout}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 font-medium"
+                      >
+                        Log out
+                      </Button>
+                   </>
+                 ) : (
+                   <>
+                     <NotificationDropdown />
+                     
+                     <DropdownMenu>
+                       <DropdownMenuTrigger className="focus:outline-none">
+                         <div className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer">
+                             <Avatar className="h-9 w-9 border border-gray-200">
+                                 <AvatarImage src={user.profileImage ? `${API_URL}/${user.profileImage}` : ''} alt={user.name} />
+                                 <AvatarFallback className="bg-green-100 text-green-700 text-xs">{getInitials(user.name)}</AvatarFallback>
+                             </Avatar>
+                             <span className="text-gray-900 font-semibold">{user.name}</span>
+                             <FaChevronDown className="text-gray-400 text-xs" />
+                         </div>
+                       </DropdownMenuTrigger>
+                       <DropdownMenuContent align="end" className="w-56">
+                         <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                         <DropdownMenuSeparator />
+                         <DropdownMenuItem asChild>
+                             <Link to="/profile" className="cursor-pointer w-full flex items-center">
+                                 <User className="mr-2 h-4 w-4" />
+                                 <span>Profile</span>
+                             </Link>
+                         </DropdownMenuItem>
+                         <DropdownMenuSeparator />
+                         <DropdownMenuItem onClick={logout} className="text-red-600 focus:text-red-600 cursor-pointer">
+                             <LogOut className="mr-2 h-4 w-4" />
+                             <span>Logout</span>
+                         </DropdownMenuItem>
+                       </DropdownMenuContent>
+                     </DropdownMenu>
+                   </>
+                 )}
                  </div>
              ) : (
                  <Link to="/signup">

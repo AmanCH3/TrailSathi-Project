@@ -38,6 +38,10 @@ router.route('/')
     .get(authMiddleware.checkUser, groupController.getAllGroups)
     .post(authMiddleware.protect, groupController.uploadGroupImages, groupController.createGroup);
 
+// --- NEW ROUTE FOR ADMIN PENDING REQUESTS ---
+// MUST be before /:groupId to avoid "requests" being treated as an ID
+router.get('/requests/pending', authMiddleware.protect, membershipController.getAllPendingRequests);
+
 router.route('/:groupId')
     .get(authMiddleware.protect, groupController.getGroup) 
     .put(authMiddleware.protect, groupController.uploadGroupImages, groupController.updateGroup) // owner/admin
@@ -45,8 +49,13 @@ router.route('/:groupId')
 
 // Membership Routes
 router.post('/:groupId/join', authMiddleware.protect, membershipController.joinGroup);
+router.post('/:groupId/request-join', authMiddleware.protect, membershipController.requestToJoinGroup); // Request
 router.delete('/:groupId/leave', authMiddleware.protect, membershipController.leaveGroup);
 router.get('/:groupId/members', authMiddleware.protect, membershipController.getGroupMembers);
+
+// Request Approval/Denial
+router.patch('/:groupId/requests/:requestId/approve', authMiddleware.protect, membershipController.approveJoinRequest);
+router.patch('/:groupId/requests/:requestId/deny', authMiddleware.protect, membershipController.denyJoinRequest);
 
 // Group Chat Routes
 router.route('/:groupId/messages')

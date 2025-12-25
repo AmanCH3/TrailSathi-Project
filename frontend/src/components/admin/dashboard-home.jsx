@@ -34,11 +34,20 @@ const getActivityIcon = (type) => {
             return <UserPlus {...iconProps} />;
         case 'group_created':
             return <Users {...iconProps} />;
-        // Add more cases here as your activity types grow
-        // case 'hike_completed':
-        //     return <CheckCircle {...iconProps} />;
+        case 'hike_planned':
+            return <Calendar {...iconProps} />;
+        case 'hike_completed':
+            return <Mountain {...iconProps} />;
+        case 'review_posted':
+            return <TrendingUp {...iconProps} />;
+        case 'post_created':
+            return <Users {...iconProps} />;
+        case 'event_created':
+            return <Calendar {...iconProps} />;
+        case 'payment_made':
+            return <DollarSign {...iconProps} />;
         default:
-            return null; // Don't show an icon for unknown types
+            return null;
     }
 }
 // === END: New Helper function for Icons ===
@@ -198,10 +207,10 @@ export function DashboardHome() {
                     <Calendar className="h-5 w-5" />
                     Recent Activity
                 </CardTitle>
-                <CardDescription>Latest user actions and system updates</CardDescription>
+                <CardDescription>All user logs and system activities</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-4 max-h-[500px] overflow-y-auto">
                     {isLoadingActivity ? (
                         <div className="flex justify-center items-center py-4">
                             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -228,13 +237,19 @@ export function DashboardHome() {
                                                 {getActivityIcon(activity.type)}
                                                 {activity.type === 'user_joined' && 'joined the community.'}
                                                 {activity.type === 'group_created' && 'created a new group.'}
+                                                {activity.type === 'hike_planned' && `planned a hike to ${activity.trail}.`}
+                                                {activity.type === 'hike_completed' && `completed a hike to ${activity.trail}.`}
+                                                {activity.type === 'review_posted' && `posted a review for ${activity.trail}.`}
+                                                {activity.type === 'post_created' && (activity.trail ? `created a post in ${activity.trail}.` : 'created a post.')}
+                                                {activity.type === 'event_created' && `created an event.`}
+                                                {activity.type === 'payment_made' && `made a payment of ${activity.trail}.`}
                                             </p>
                                             <p className="text-xs text-muted-foreground">
                                                 {formatDistanceToNow(new Date(activity.time), { addSuffix: true })}
                                             </p>
                                         </div>
                                     </div>
-                                    {activity.trail && (
+                                    {activity.trail && (activity.type === 'group_created') && (
                                         <div className="border rounded-md p-2 bg-gray-50/50">
                                             <p className="text-sm font-medium text-gray-800">{activity.trail}</p>
                                         </div>
