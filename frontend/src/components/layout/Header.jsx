@@ -4,6 +4,7 @@ import { FaBars, FaTimes, FaSearch, FaChevronDown, FaRegCompass } from "react-ic
 import { useAuth } from "@app/providers/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { ENV } from "@config/env";
+import { useSavedTrails } from "../../context/SavedTrailsContext";
 
 const API_URL = ENV.API_URL;
 
@@ -25,6 +26,7 @@ import WeatherWidget from "../common/WeatherWidget";
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
+  const { savedCount } = useSavedTrails();
   
   // Debugging user object
   useEffect(() => {
@@ -82,8 +84,15 @@ export default function Header() {
                 </div>
              </div>
 
-             <div className="cursor-pointer hover:text-black transition-colors">
-                <Link to="/saved">Saved</Link>
+             <div className="cursor-pointer hover:text-black transition-colors relative">
+                <Link to="/saved-trails" className="flex items-center gap-1.5">
+                  Saved
+                  {savedCount > 0 && (
+                    <span className="bg-green-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                      {savedCount}
+                    </span>
+                  )}
+                </Link>
              </div>
 
              {isAuthenticated ? (
@@ -176,7 +185,7 @@ export default function Header() {
                 <Link to="/trails" className="font-medium text-gray-700 py-2">Trails</Link>
                 <Link to="/checklist" className="font-medium text-gray-700 py-2">Checklist</Link>
                  <Link to="/community/groups" className="font-medium text-gray-700 py-2">Groups</Link>
-                <Link to="/saved" className="font-medium text-gray-700 py-2">Saved</Link>
+                <Link to="/saved-trails" className="font-medium text-gray-700 py-2">Saved</Link>
                 {isAuthenticated ? (
                      <button onClick={logout} className="text-red-600 text-left font-medium py-2">Logout</button>
                 ) : (

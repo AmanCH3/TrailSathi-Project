@@ -26,6 +26,7 @@ import EsewaSuccessPage from "../pages/EsewaSuccessPage";
 import ChecklistPage from "../pages/ChecklistPage";
 import ProfilePage from "../pages/ProfilePage";
 import GoogleAuthCallback from "../pages/GoogleAuthCallBack";
+import SavedTrailsPage from "../pages/SavedTrailsPage";
 
 // Community Feature Pages
 import { GroupsDiscoveryPage, GroupDetailPage, EventDetailPage, MessengerPage } from "../features/community";
@@ -60,6 +61,7 @@ export default function AppRouter() {
            <Route path="/auth/google/success" element={<GoogleAuthCallback />} />
           <Route path="groups" element={<GroupsPage />} />
           <Route path="payments" element={<PaymentsPage />} />
+          <Route path="saved-trails" element={<SavedTrailsPage />} />
 
           {/* Community Feature Routes */}
           <Route path="community/groups" element={<GroupsDiscoveryPage />} />
