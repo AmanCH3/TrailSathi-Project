@@ -42,6 +42,15 @@ router.route('/')
 // MUST be before /:groupId to avoid "requests" being treated as an ID
 router.get('/requests/pending', authMiddleware.protect, membershipController.getAllPendingRequests);
 
+// --- GROUP APPROVAL ROUTES ---
+// Get all pending groups (Admin only)
+router.get('/pending-groups', authMiddleware.protect, authMiddleware.authorize('admin'), groupController.getPendingGroups);
+// Get user's own pending groups
+router.get('/my-pending-groups', authMiddleware.protect, groupController.getMyPendingGroups);
+// Approve/Reject group (Admin only)
+router.patch('/:groupId/approve', authMiddleware.protect, authMiddleware.authorize('admin'), groupController.approveGroup);
+router.patch('/:groupId/reject', authMiddleware.protect, authMiddleware.authorize('admin'), groupController.rejectGroup);
+
 router.route('/:groupId')
     .get(authMiddleware.protect, groupController.getGroup) 
     .put(authMiddleware.protect, groupController.uploadGroupImages, groupController.updateGroup) // owner/admin

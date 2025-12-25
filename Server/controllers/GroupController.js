@@ -37,8 +37,17 @@ exports.uploadGroupImages = upload.fields([
 ]);
 
 exports.getAllGroups = catchAsync(async (req, res, next) => {
-  // Execute query
-  const features = new APIFeatures(Group.find(), req.query)
+  // Base query - admins see all, regular users only see approved groups
+  let baseQuery = Group.find();
+  
+  if (req.user && req.user.role !== 'admin') {
+    baseQuery = Group.find({ status: 'approved' });
+  } else if (!req.user) {
+    baseQuery = Group.find({ status: 'approved' });
+  }
+
+  // Execute query with filters
+  const features = new APIFeatures(baseQuery, req.query)
     .filter()
     .sort()
     .limitFields()
@@ -123,7 +132,8 @@ exports.createGroup = catchAsync(async (req, res, next) => {
     ...groupData,
     owner: req.user.id,
     admins: [req.user.id],
-    memberCount: 1 // Owner is the first member
+    memberCount: 1, // Owner is the first member
+    status: 'pending' // Set to pending for admin approval
   });
 
   // Add owner as a member
@@ -134,8 +144,20 @@ exports.createGroup = catchAsync(async (req, res, next) => {
     status: 'active'
   });
 
+  // TODO: Send notification to admins about new group pending approval
+  // const admins = await User.find({ role: 'admin' });
+  // for (const admin of admins) {
+  //   await Notification.create({
+  //     user: admin._id,
+  //     type: 'group_pending_approval',
+  //     message: `New group "${newGroup.name}" is pending approval`,
+  //     relatedGroup: newGroup._id
+  //   });
+  // }
+
   res.status(201).json({
     success: true,
+    message: 'Group created successfully and is pending admin approval',
     data: {
       group: newGroup
     }
@@ -202,5 +224,120 @@ exports.deleteGroup = catchAsync(async (req, res, next) => {
   res.status(204).json({
     success: true,
     data: null
+  });
+});
+
+// ===== ADMIN GROUP APPROVAL FUNCTIONS =====
+
+// Get all pending groups (Admin only)
+exports.getPendingGroups = catchAsync(async (req, res, next) => {
+  const pendingGroups = await Group.find({ status: 'pending' })
+    .populate('owner', 'name email profileImage')
+    .sort({ createdAt: -1 })
+    .lean();
+
+  res.status(200).json({
+    success: true,
+    results: pendingGroups.length,
+    data: {
+      groups: pendingGroups
+    }
+  });
+});
+
+// Get user's own pending groups
+exports.getMyPendingGroups = catchAsync(async (req, res, next) => {
+  const myPendingGroups = await Group.find({ 
+    owner: req.user.id,
+    status: 'pending'
+  })
+    .sort({ createdAt: -1 })
+    .lean();
+
+  res.status(200).json({
+    success: true,
+    results: myPendingGroups.length,
+    data: {
+      groups: myPendingGroups
+    }
+  });
+});
+
+// Approve a group (Admin only)
+exports.approveGroup = catchAsync(async (req, res, next) => {
+  const group = await Group.findById(req.params.groupId);
+
+  if (!group) {
+    return next(new AppError('No group found with that ID', 404));
+  }
+
+  if (group.status === 'approved') {
+    return next(new AppError('This group is already approved', 400));
+  }
+
+  group.status = 'approved';
+  group.reviewedBy = req.user.id;
+  group.approvalDate = Date.now();
+  await group.save();
+
+  // Send notification to group owner
+  const Notification = require('../models/notification.model');
+  await Notification.create({
+    recipient: group.owner,
+    title: 'Group Approved',
+    message: `Your group "${group.name}" has been approved by admin`,
+    type: 'system',
+    link: `/community/groups/${group._id}`
+  });
+
+  res.status(200).json({
+    success: true,
+    message: 'Group approved successfully',
+    data: {
+      group
+    }
+  });
+});
+
+// Reject a group (Admin only)
+exports.rejectGroup = catchAsync(async (req, res, next) => {
+  const { reason } = req.body;
+
+  if (!reason) {
+    return next(new AppError('Please provide a reason for rejection', 400));
+  }
+
+  const group = await Group.findById(req.params.groupId);
+
+  if (!group) {
+    return next(new AppError('No group found with that ID', 404));
+  }
+
+  if (group.status === 'rejected') {
+    return next(new AppError('This group is already rejected', 400));
+  }
+
+  group.status = 'rejected';
+  group.reviewedBy = req.user.id;
+  group.rejectionReason = reason;
+  group.approvalDate = Date.now();
+  await group.save();
+
+  // Send notification to group owner
+  const Notification = require('../models/notification.model');
+  await Notification.create({
+    recipient: group.owner,
+    title: 'Group Rejected',
+    message: `Your group "${group.name}" was rejected. Reason: ${reason}`,
+    type: 'system',
+    link: `/community/groups`
+  });
+
+  res.status(200).json({
+    success: true,
+    message: 'Group rejected successfully',
+    data: {
+      group
+    }
   });
 });

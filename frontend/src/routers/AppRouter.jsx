@@ -14,6 +14,7 @@ import ChecklistManagementPage from "../pages/admin/ChecklistManagementPage";
 import GroupHikeManagementPage from "../pages/admin/GroupHikeManagement";
 import PaymentManagementPage from "../pages/admin/PaymentManagementPage";
 import TrailManagementPage from "../pages/admin/TrailManagement";
+import PendingGroupsPage from "../pages/admin/PendingGroupsPage";
 import AdminLayout from "../layouts/admin/AdminLayout";
 import GroupsPage from "../pages/GroupPage";
 import ProtectedRoute from "../components/protectedRoutes";
@@ -104,6 +105,7 @@ export default function AppRouter() {
           <Route path="hikes" element={<GroupHikeManagementPage />} />
           <Route path="payments" element={<PaymentManagementPage />} />
           <Route path="trail" element={<TrailManagementPage />} />
+          <Route path="pending-groups" element={<PendingGroupsPage />} />
           <Route path="groups/:groupId" element={<GroupDetails />} />
           
           {/* The incorrect checklist route has been removed from this section */}
