@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sun, Cloud, CloudSun, CloudRain, Loader2, Download, Check } from 'lucide-react';
+import { Sun, Cloud, CloudSun, CloudRain, Loader2, Download, Check, ArrowLeft } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 // --- Custom Checkbox Component ---
@@ -123,6 +124,8 @@ const ChecklistDisplay = ({ checklistData, onCheckChange, onClearAll }) => {
 // --- Main Page Component ---
 // This is the primary export, bringing together the form and the checklist display.
 export default function ChecklistPage() {
+    const navigate = useNavigate();
+    
     // Form state
     const [experience, setExperience] = useState('new');
     const [duration, setDuration] = useState('full-day');
@@ -248,6 +251,14 @@ export default function ChecklistPage() {
 
     return (
         <div className="bg-gray-50 min-h-screen">
+            {/* Fixed Back Button */}
+            <button
+                onClick={() => navigate('/')}
+                className="fixed top-24 left-6 z-50 flex items-center justify-center w-10 h-10 bg-white hover:bg-gray-50 text-gray-700 rounded-full shadow-lg border border-gray-200 transition-all duration-200 hover:shadow-xl"
+            >
+                <ArrowLeft className="w-5 h-5" />
+            </button>
+
             <div className="container mx-auto py-12 px-4">
                 <div className="text-center mb-10">
                     <h1 className="text-4xl font-bold tracking-tight text-gray-900">Generate Your Checklist</h1>

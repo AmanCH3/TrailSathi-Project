@@ -83,9 +83,9 @@ export const joinTrailWithDateApi = (id, data) => {
 };
 
 export const completeTrailApi = (joinedTrailId) => {
-  return axios.post(`trails/joined/${joinedTrailId}/complete`);
+  return axios.post(`trails/${joinedTrailId}/complete`);
 };
 
 export const cancelJoinedTrailApi = (joinedTrailId) => {
-  return axios.delete(`trails/joined/${joinedTrailId}/cancel`);
+  return axios.delete(`trails/${joinedTrailId}/cancel`);
 };

@@ -61,195 +61,185 @@
 .path-svg {
     width: 100%;
     height: 100%;
-    color: #10b981;
+    color: #22c55e;
     opacity: 0.6;
+    filter: drop-shadow(0 2px 3px rgba(34, 197, 94, 0.2));
 }
 
 .animated-path {
-    stroke-dasharray: 10, 5;
-    animation: dash 2s linear infinite;
+    stroke-dasharray: 12, 8;
+    animation: dash 1.5s linear infinite;
 }
 
 @keyframes dash {
     to {
-        stroke-dashoffset: -100;
+        stroke-dashoffset: -40;
     }
 }
 
 /* Hiker Animation */
 .hiker-container {
     position: absolute;
-    top: 45%;
+    top: 0;
     left: 0;
     z-index: 3;
-    animation: hikerWalk 3s ease-in-out infinite;
+    width: 40px;
+    height: 40px;
+    /* Use Motion Path to follow the SVG path exactly */
+    offset-path: path("M 10,100 Q 50,40 100,70 T 190,100");
+    animation: moveAlongPath 4s linear infinite;
+}
+
+/* Adjust SVG path to match the offset-path coordinate system if needed, 
+   or just approximate with keyframes if offset-path is tricky with responsive sizing.
+   Let's stick to a robust keyframe approximation for wider compatibility if needed,
+   but standard modern browsers support offset-path. 
+   
+   However, our SVG viewBox is 0 0 200 100.
+   The path in SVG is d="M 10,80 Q 50,20 100,50 T 190,80"
+   
+   Let's use specific keyframes to match the visual curve 'up and down'
+*/
+.hiker-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 3;
+    animation: hikeJourney 4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
 }
 
 .hiker-icon {
-    color: #f97316;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-    animation: bounce 0.6s ease-in-out infinite;
+    color: #ea580c;
+    /* Orange-600 */
+    filter: drop-shadow(0 4px 6px rgba(234, 88, 12, 0.3));
+    animation: hikerBounce 0.5s ease-in-out infinite alternate;
 }
 
-@keyframes hikerWalk {
+@keyframes hikeJourney {
+    0% {
+        left: 5%;
+        top: 75%;
+        /* Start low */
+        transform: rotate(-5deg);
+    }
 
-    0%,
-    100% {
-        left: 0;
-        transform: translateY(0);
+    25% {
+        top: 45%;
+        /* Peak of first hill */
+        transform: rotate(5deg);
     }
 
     50% {
-        left: calc(100% - 40px);
-        transform: translateY(-15px);
+        left: 50%;
+        top: 50%;
+        /* Valley */
+        transform: rotate(0deg);
     }
-}
 
-@keyframes bounce {
+    75% {
+        top: 75%;
+        /* Low again */
+        transform: rotate(-5deg);
+    }
 
-    0%,
     100% {
-        transform: translateY(0) rotate(-10deg);
-    }
-
-    50% {
-        transform: translateY(-4px) rotate(10deg);
+        left: 90%;
+        top: 75%;
+        /* End */
+        transform: rotate(0deg);
     }
 }
 
-/* Trees Animation */
+@keyframes hikerBounce {
+    from {
+        transform: translateY(0) scale(1);
+    }
+
+    to {
+        transform: translateY(-4px) scale(1.1);
+    }
+}
+
+/* Trees Animation - Pop in sequentially */
 .trees {
     position: absolute;
-    bottom: 0;
+    bottom: 10px;
     left: 0;
     right: 0;
     display: flex;
     justify-content: space-between;
-    padding: 0 20px;
+    padding: 0 30px;
     z-index: 1;
 }
 
 .tree {
-    color: #16a34a;
-    opacity: 0;
-    animation: treeGrow 1.5s ease-out forwards;
+    color: #15803d;
+    /* Green-700 */
+    transform-origin: bottom center;
+    animation: sway 3s ease-in-out infinite;
 }
 
 .tree-1 {
-    animation-delay: 0.3s;
-}
-
-.tree-2 {
-    animation-delay: 0.5s;
-    color: #22c55e;
-}
-
-.tree-3 {
-    animation-delay: 0.7s;
-    color: #16a34a;
-}
-
-@keyframes treeGrow {
-    from {
-        opacity: 0;
-        transform: scaleY(0);
-        transform-origin: bottom;
-    }
-
-    to {
-        opacity: 1;
-        transform: scaleY(1);
-    }
-}
-
-/* Sun Pulse */
-.sun-pulse {
-    position: absolute;
-    top: 10px;
-    right: 20px;
-    width: 30px;
-    height: 30px;
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-    border-radius: 50%;
-    z-index: 0;
-    animation: pulse 2s ease-in-out infinite;
-    box-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
-}
-
-@keyframes pulse {
-
-    0%,
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-
-    50% {
-        transform: scale(1.2);
-        opacity: 0.8;
-    }
-}
-
-/* Loading Text */
-.loading-text {
-    font-size: 1rem;
-    font-weight: 500;
-    color: #64748b;
-    text-align: center;
-    animation: fadeIn 0.5s ease-out;
-}
-
-.dot-1,
-.dot-2,
-.dot-3 {
-    animation: dotPulse 1.5s infinite;
-}
-
-.dot-1 {
     animation-delay: 0s;
 }
 
-.dot-2 {
-    animation-delay: 0.3s;
+.tree-2 {
+    animation-delay: 1s;
 }
 
-.dot-3 {
-    animation-delay: 0.6s;
+.tree-3 {
+    animation-delay: 2s;
 }
 
-@keyframes dotPulse {
+@keyframes sway {
 
     0%,
-    80%,
     100% {
-        opacity: 0;
+        transform: rotate(-3deg);
     }
 
-    40% {
-        opacity: 1;
+    50% {
+        transform: rotate(3deg);
     }
 }
 
-@keyframes fadeIn {
+/* Sun - Warm pulse */
+.sun-pulse {
+    position: absolute;
+    top: 15px;
+    right: 25px;
+    width: 36px;
+    height: 36px;
+    background: radial-gradient(circle, #fcd34d 30%, #f59e0b 70%);
+    border-radius: 50%;
+    box-shadow: 0 0 25px rgba(251, 191, 36, 0.6);
+    animation: sunGlow 4s ease-in-out infinite alternate;
+}
+
+@keyframes sunGlow {
     from {
-        opacity: 0;
+        opacity: 0.8;
+        transform: scale(0.9);
     }
 
     to {
         opacity: 1;
+        transform: scale(1.1);
+        box-shadow: 0 0 40px rgba(251, 191, 36, 0.8);
     }
 }
 
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+/* Loading Text with typing effect */
+.loading-text {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #4b5563;
+    margin-top: 0.5rem;
+    letter-spacing: 0.025em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
 }
 
 /* Simple Spinner Loader */

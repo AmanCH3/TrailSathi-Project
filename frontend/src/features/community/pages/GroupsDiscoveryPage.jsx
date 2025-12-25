@@ -6,7 +6,7 @@ import { GroupFilters } from '../components/groups/GroupFilters';
 import { SkeletonCard } from '../components/ui/Skeleton';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorBanner } from '../components/ui/ErrorBanner';
-import { Search } from 'lucide-react';
+import { Search, ArrowLeft } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/app/providers/AuthProvider';
 import { CreateGroupForm } from '@/components/user_group_management/create_group_form';
@@ -41,6 +41,14 @@ export const GroupsDiscoveryPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20 px-4 pb-12">
+      {/* Fixed Back Button */}
+      <button
+        onClick={() => navigate('/')}
+        className="fixed top-24 left-6 z-50 flex items-center justify-center w-10 h-10 bg-white hover:bg-gray-50 text-gray-700 rounded-full shadow-lg border border-gray-200 transition-all duration-200 hover:shadow-xl"
+      >
+        <ArrowLeft className="w-5 h-5" />
+      </button>
+
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">

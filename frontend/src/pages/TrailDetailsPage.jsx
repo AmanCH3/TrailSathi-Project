@@ -15,7 +15,8 @@ import {
   Heart,
   Search,
   SlidersHorizontal,
-  MoreHorizontal
+  MoreHorizontal,
+  ArrowLeft
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { CreateReviewModal } from '../components/reviews/CreateReviewModal';
@@ -57,6 +58,14 @@ export default function TrailDetailsPage() {
   return (
     <div className="bg-white min-h-screen font-sans pb-20">
       
+      {/* Fixed Back Button */}
+      <button
+        onClick={() => navigate(-1)}
+        className="fixed top-24 left-6 z-50 flex items-center justify-center w-10 h-10 bg-white hover:bg-gray-50 text-gray-700 rounded-full shadow-lg border border-gray-200 transition-all duration-200 hover:shadow-xl"
+      >
+        <ArrowLeft className="w-5 h-5" />
+      </button>
+
       {/* Container */}
       <div className="max-w-[1240px] mx-auto px-6 pt-6">
         

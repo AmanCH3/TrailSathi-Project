@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Star } from 'lucide-react';
+import { Star, ArrowLeft } from 'lucide-react';
 import { useAdminTrail } from '../hooks/admin/useAdminTrail';
 import TrailFilterPanel from '../features/trails/TrailFilterPanel';
 import { Button } from '@/components/ui/button';
@@ -138,6 +138,7 @@ const Pagination = ({ pagination, onPageChange }) => {
 import { useUserProfile } from '../hooks/useUserProfile';
 
 export default function TrailListPage() {
+  const navigate = useNavigate();
   const [activeFilters, setActiveFilters] = useState(initialFilters);
   const { data: user } = useUserProfile();
   
@@ -188,6 +189,14 @@ export default function TrailListPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Fixed Back Button */}
+      <button
+        onClick={() => navigate('/')}
+        className="fixed top-24 left-6 z-50 flex items-center justify-center w-10 h-10 bg-white hover:bg-gray-50 text-gray-700 rounded-full shadow-lg border border-gray-200 transition-all duration-200 hover:shadow-xl"
+      >
+        <ArrowLeft className="w-5 h-5" />
+      </button>
+
       <div className="container mx-auto px-4 py-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Discover Trails</h1>
