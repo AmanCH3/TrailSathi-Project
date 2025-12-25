@@ -23,6 +23,7 @@ import { UploadPhotosModal } from '../components/reviews/UploadPhotosModal';
 import { JoinTrailDialog } from '../components/trails/JoinTrailDialog';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { CheckCircle, UserPlus } from 'lucide-react';
+import { HikingLoader } from '../components/common/HikingLoader';
 
 export default function TrailDetailsPage() {
   const { id } = useParams();
@@ -45,7 +46,7 @@ export default function TrailDetailsPage() {
       return `${baseUrl}/${cleanPath}`;
   };
 
-  if (isLoading) return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  if (isLoading) return <div className="flex h-screen items-center justify-center"><HikingLoader text="Loading trail details" /></div>;
   if (isError || !trail) return <div className="flex h-screen items-center justify-center">Trail not found</div>;
 
   const getDuration = (length = 0) => {

@@ -13,4 +13,10 @@ router.put('/me', userController.getMe, userController.updateMe);
 router.put('/me/picture', userController.uploadUserPhoto, userController.updateProfilePicture);
 router.get('/dashboard', dashboardController.getMyDashboard);
 
+// Admin routes for user management
+router.get('/', authController.authorize('admin'), userController.getAllUsers);
+router.get('/:id', authController.authorize('admin'), userController.getUser);
+router.put('/:id', authController.authorize('admin'), userController.updateUser);
+router.delete('/:id', authController.authorize('admin'), userController.deleteUser);
+
 module.exports = router;

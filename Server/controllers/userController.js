@@ -120,3 +120,85 @@ exports.updateProfilePicture = catchAsync(async (req, res, next) => {
     });
 });
 
+// Admin: Get all users with pagination and search
+exports.getAllUsers = catchAsync(async (req, res, next) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search || '';
+    const skip = (page - 1) * limit;
+
+    // Build search query
+    let query = {};
+    if (search) {
+        query = {
+            $or: [
+                { name: { $regex: search, $options: 'i' } },
+                { email: { $regex: search, $options: 'i' } }
+            ]
+        };
+    }
+
+    // Get total count for pagination
+    const total = await User.countDocuments(query);
+    
+    // Get users with pagination
+    const users = await User.find(query)
+        .select('-password -passwordResetToken -passwordResetExpires')
+        .skip(skip)
+        .limit(limit)
+        .sort({ createdAt: -1 });
+
+    res.status(200).json({
+        success: true,
+        data: users,
+        pagination: {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit)
+        }
+    });
+});
+
+// Admin: Update any user
+exports.updateUser = catchAsync(async (req, res, next) => {
+    // Filter allowed fields for admin update
+    const allowedFields = ['name', 'email', 'role', 'subscription', 'status'];
+    const filteredBody = {};
+    
+    Object.keys(req.body).forEach(key => {
+        if (allowedFields.includes(key)) {
+            filteredBody[key] = req.body[key];
+        }
+    });
+
+    const user = await User.findByIdAndUpdate(req.params.id, filteredBody, {
+        new: true,
+        runValidators: true
+    }).select('-password');
+
+    if (!user) {
+        return next(new AppError('No user found with that ID', 404));
+    }
+
+    res.status(200).json({
+        success: true,
+        data: user
+    });
+});
+
+// Admin: Delete user
+exports.deleteUser = catchAsync(async (req, res, next) => {
+    const user = await User.findByIdAndDelete(req.params.id);
+
+    if (!user) {
+        return next(new AppError('No user found with that ID', 404));
+    }
+
+    res.status(200).json({
+        success: true,
+        message: 'User deleted successfully',
+        data: null
+    });
+});
+

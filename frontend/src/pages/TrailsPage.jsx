@@ -6,6 +6,7 @@ import { useAdminTrail } from '../hooks/admin/useAdminTrail';
 import TrailFilterPanel from '../features/trails/TrailFilterPanel';
 import { Button } from '@/components/ui/button';
 import { JoinTrailDialog } from '../components/trails/JoinTrailDialog';
+import { HikingLoader } from '../components/common/HikingLoader';
 
 const initialFilters = {
   page: 1,
@@ -210,10 +211,7 @@ export default function TrailListPage() {
           )}
 
           {isLoading && (
-            <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-              <p className="ml-4 text-gray-600">Loading trails...</p>
-            </div>
+            <HikingLoader text="Discovering trails" />
           )}
 
           {isError && (
