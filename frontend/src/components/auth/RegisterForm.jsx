@@ -3,6 +3,7 @@ import React from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useRegistrationUser } from "../../hooks/useRegisterUser";
+import "./LoginForm.css";
 
 export default function RegisterForm() {
   const { mutate, data, error, isPending, isSuccess, isError } =

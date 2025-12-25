@@ -68,7 +68,6 @@ export function SubscriptionPlans() {
 
     setLoadingPlan(plan.title);
     try {
-      // Use configured axiosInstance which handles baseURL and Authorization header
       const response = await axiosInstance.post('/api/payment/initiate', {
         plan: plan.title,
         amount: parseInt(plan.price, 10)
@@ -87,7 +86,7 @@ export function SubscriptionPlans() {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {plansData.map((plan, index) => {
         const isCurrent = currentUserPlan === plan.title;
         const canUpgrade = index > currentUserPlanIndex;
@@ -95,45 +94,112 @@ export function SubscriptionPlans() {
         const isBasicPlan = plan.title === 'Basic';
 
         return (
-          <Card key={plan.title} className={`flex flex-col ${isCurrent ? 'border-green-600 border-2' : ''} ${plan.isPopular && !isCurrent ? 'shadow-lg' : ''}`}>
-            {plan.isPopular && <div className="text-center py-1 bg-green-500 text-white font-semibold text-sm rounded-t-lg">MOST POPULAR</div>}
-            <CardHeader>
-              <CardTitle>{plan.title}</CardTitle>
-              <CardDescription>{plan.description}</CardDescription>
-              <div className="pt-4">
-                <span className="text-4xl font-bold">{plan.price !== "Free" ? `रु ${plan.price}` : 'Free'}</span>
-                <span className="text-muted-foreground">{plan.period}</span>
+          <div key={plan.title} className="relative">
+            {/* Most Popular Badge */}
+            {plan.isPopular && (
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                <span className="bg-green-500 text-white text-xs font-semibold px-4 py-1 rounded-full">
+                  MOST POPULAR
+                </span>
               </div>
-            </CardHeader>
-            <CardContent className="flex-grow">
-              <ul className="space-y-3">
-                {plan.features.map((feature, i) => (
-                  <li key={i} className="flex items-center gap-2">
-                    {feature.included ? <Check className="h-5 w-5 text-green-500" /> : <X className="h-5 w-5 text-red-500" />}
-                    <span className="text-sm text-gray-700">{feature.text}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-            <CardFooter>
-              {/* --- LOGIC CHANGE IS HERE --- */}
-              {isBasicPlan ? (
-                  // Only show the button for the Basic plan if it's the user's current plan.
-                  isCurrent && <Button className="w-full" variant="outline" disabled>Your Current Plan</Button>
-              ) : (
-                  // For Pro and Premium, the logic remains the same.
+            )}
+
+            <Card 
+              className={`
+                h-full flex flex-col transition-all duration-300
+                ${isCurrent ? 'border-green-500 border-2 shadow-lg bg-green-50/30' : 'border-gray-200'}
+                ${plan.isPopular && !isCurrent ? 'border-green-500 border-2' : ''}
+                hover:shadow-xl
+              `}
+            >
+              <CardHeader className="pb-4">
+                <CardTitle className="text-2xl font-bold text-gray-900">{plan.title}</CardTitle>
+                <CardDescription className="text-gray-600 text-sm">
+                  {plan.description}
+                </CardDescription>
+                
+                {/* Price */}
+                <div className="pt-4">
+                  <div className="flex items-baseline gap-1">
+                    {plan.price !== "Free" && (
+                      <span className="text-xl font-medium text-gray-900">₹</span>
+                    )}
+                    <span className="text-4xl font-bold text-gray-900">
+                      {plan.price}
+                    </span>
+                    {plan.period && (
+                      <span className="text-gray-600 text-sm font-medium">{plan.period}</span>
+                    )}
+                  </div>
+                </div>
+              </CardHeader>
+
+              <CardContent className="flex-grow pb-6">
+                <ul className="space-y-3">
+                  {plan.features.map((feature, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      {feature.included ? (
+                        <Check className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                      ) : (
+                        <X className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                      )}
+                      <span className={`text-sm ${feature.included ? 'text-gray-700' : 'text-gray-400 line-through'}`}>
+                        {feature.text}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* Current Plan Badge */}
+                {isCurrent && (
+                  <div className="mt-6 text-center">
+                    <span className="inline-block bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full">
+                      Your Current Plan
+                    </span>
+                  </div>
+                )}
+              </CardContent>
+
+              <CardFooter className="pt-0">
+                {isBasicPlan ? (
+                  isCurrent && (
+                    <Button 
+                      className="w-full bg-gray-100 text-gray-500 cursor-not-allowed" 
+                      variant="outline" 
+                      disabled
+                    >
+                      Current Plan
+                    </Button>
+                  )
+                ) : (
                   <Button 
-                    className="w-full" 
-                    variant={isCurrent ? "outline" : "default"}
+                    className={`
+                      w-full font-semibold
+                      ${isCurrent 
+                        ? 'bg-gray-100 text-gray-500 cursor-not-allowed' 
+                        : canUpgrade 
+                          ? 'bg-gray-900 hover:bg-gray-800 text-white' 
+                          : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      }
+                    `}
                     onClick={() => handlePayment(plan)}
-                    disabled={!isAuthenticated || isLoading || (plan.price !== "Free" && !canUpgrade && !isCurrent)}
+                    disabled={!isAuthenticated || isLoading || !canUpgrade}
                   >
-                    {isLoading ? "Processing..." : 
-                     isCurrent ? "Your Current Plan" : `Upgrade to ${plan.title}`}
+                    {isLoading ? (
+                      <span className="flex items-center gap-2">
+                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                        Processing...
+                      </span>
+                    ) : isCurrent ? (
+                      "Current Plan"
+                    ) : (
+                      `Upgrade to ${plan.title}`
+                    )}
                   </Button>
-              )}
-            </CardFooter>
-          </Card>
+                )}
+              </CardFooter>
+            </Card>
+          </div>
         );
       })}
     </div>
