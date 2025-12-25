@@ -56,15 +56,22 @@ export const GroupHeader = ({ group, onJoin, onLeave, isOwner, onEdit }) => {
 
              {/* Edit Button for Owner */}
              {isOwner && (
-                 <Button 
-                     variant="secondary" 
-                     size="sm" 
-                     className="bg-white/90 hover:bg-white text-gray-800"
-                     onClick={onEdit}
-                 >
-                     <Edit2 className="w-4 h-4 mr-2" />
-                     Edit Group
-                 </Button>
+                 <div className="flex gap-2">
+                     {/* Ideally we would pass onCreateEvent prop, but let's stick to just visible for now if we can't wire it up easily without changing props everywhere. 
+                         Actually, I need to pass onCreateEvent to GroupHeader first.
+                         For now, I will revert this idea and stick to fixing the ID check in DetailPage and notifying user.
+                         Adding a button here requires prop drilling which is fine but let's be sure.
+                      */}
+                     <Button 
+                         variant="secondary" 
+                         size="sm" 
+                         className="bg-white/90 hover:bg-white text-gray-800"
+                         onClick={onEdit}
+                     >
+                         <Edit2 className="w-4 h-4 mr-2" />
+                         Edit Group
+                     </Button>
+                 </div>
              )}
           </div>
           

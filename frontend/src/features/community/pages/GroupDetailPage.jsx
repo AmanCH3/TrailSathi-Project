@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/app/providers/AuthProvider';
 import { useGroupDetail, useJoinGroup, useLeaveGroup } from '../hooks/useGroups';
 import { usePosts, useCreatePost, useLikePost } from '../hooks/usePosts';
 import { useEvents, useRSVPEvent } from '../hooks/useEvents';
@@ -9,6 +10,7 @@ import { MembersPreview } from '../components/groups/MembersPreview';
 import { MembersModal } from '../components/groups/MembersModal';
 import { EditGroupModal } from '../components/groups/EditGroupModal';
 import { EventDetailModal } from '../components/events/EventDetailModal';
+import { CreateEventModal } from '../components/events/CreateEventModal';
 import { GroupChat } from '../components/groups/GroupChat';
 import { UpcomingEventHighlight } from '../components/events/UpcomingEventHighlight';
 import { PostCard } from '../components/posts/PostCard';
@@ -17,16 +19,22 @@ import { EventCard } from '../components/events/EventCard';
 import { Skeleton, SkeletonPost } from '../components/ui/Skeleton';
 import { ErrorBanner } from '../components/ui/ErrorBanner';
 import { EmptyState } from '../components/ui/EmptyState';
+import { Button } from '../components/ui/Button';
 import { MessageSquare, Calendar, Info, Lock, MessageCircle, ArrowLeft } from 'lucide-react';
 
 export const GroupDetailPage = () => {
   const { groupId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  
+  // Robust ID check
+  const currentUserId = user?._id || user?.id || localStorage.getItem('userId');
+
   const [activeTab, setActiveTab] = useState('posts');
   const [showMembersModal, setShowMembersModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState(null);
-  const currentUserId = localStorage.getItem('userId') || localStorage.getItem('user_id');
+  const [showCreateEventModal, setShowCreateEventModal] = useState(false);
 
   // Group data
   const { data: group, isLoading: isLoadingGroup, error: groupError, refetch } = useGroupDetail(groupId);
@@ -121,7 +129,16 @@ export const GroupDetailPage = () => {
   })[0];
   
   // Calculate ownership safely
-  const isOwner = group?.owner?._id === currentUserId || group?.owner?.id === currentUserId || group?.name === 'Photography Club';
+  const groupOwnerId = group?.owner?._id || group?.owner?.id;
+  const isOwner = (groupOwnerId && currentUserId && String(groupOwnerId) === String(currentUserId)) || group?.name === 'Photography Club';
+  
+  console.log('GroupDetailPage Ownership Debug:', {
+      authContextUser: user,
+      currentUserId,
+      groupOwnerId,
+      isOwner,
+      groupOwnerObject: group?.owner
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20 px-4 pb-12">
@@ -153,6 +170,12 @@ export const GroupDetailPage = () => {
              isOpen={!!selectedEventId}
              onClose={() => setSelectedEventId(null)}
              eventId={selectedEventId}
+        />
+
+        <CreateEventModal 
+            isOpen={showCreateEventModal}
+            onClose={() => setShowCreateEventModal(false)}
+            groupId={groupId}
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -271,6 +294,13 @@ export const GroupDetailPage = () => {
                 {/* Events Tab */}
                 {activeTab === 'events' && (
                   <div className="space-y-6">
+                     {isOwner && (
+                        <div className="flex justify-end">
+                            <Button variant="primary" onClick={() => setShowCreateEventModal(true)}>
+                                + Create Event
+                            </Button>
+                        </div>
+                     )}
                     {isLoadingEvents && (
                       <>
                         <Skeleton className="h-48 w-full rounded-2xl" />

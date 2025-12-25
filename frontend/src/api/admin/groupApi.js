@@ -39,3 +39,7 @@ export const denyJoinRequestApi = (groupId, requestId) => {
 export const pendingJoinRequestApi = () =>{
     return axios.get('/groups/requests/pending')
 }
+
+export const createGroupEventApi = (groupId, data) => {
+    return axios.post(`/groups/${groupId}/events`, data);
+};

@@ -10,7 +10,9 @@ import {
   approveJoinRequestApi,
   denyJoinRequestApi,
   pendingJoinRequestApi,
+  createGroupEventApi,
 } from "../api/admin/groupApi";
+
 
 
 
@@ -91,3 +93,7 @@ export const getAllPendingRequestsService = async () => {
   }
 
 }
+
+export const createGroupEventService = (groupId, data) => {
+    return createGroupEventApi(groupId, data);
+};

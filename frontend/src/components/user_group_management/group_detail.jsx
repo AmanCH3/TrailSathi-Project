@@ -219,6 +219,7 @@ import {
 } from "../../hooks/useGroup";
 import { toast } from "react-toastify";
 import { JoinGroupDialog } from "./join_group_dailog";
+import { CreateEventDialog } from "./create_event_dialog";
 import { GroupChat } from "./group_chat";
 
 
@@ -247,6 +248,16 @@ export function GroupDetails({ group, user }) {
 
 
    const [isJoinDialogOpen, setJoinDialogOpen] = useState(false);
+   const [isCreateEventOpen, setCreateEventOpen] = useState(false);
+   
+   console.log("GroupDetails Debug: ", {
+        leaderId: group?.leader?._id,
+        userId: user?._id,
+        isMatch: group?.leader?._id === user?._id,
+        leaderObject: group?.leader,
+        userObject: user
+   });
+
   if (!group) {
     return <div className="text-center text-gray-500 mt-10">Group data is not available.</div>;
   }
@@ -318,6 +329,12 @@ export function GroupDetails({ group, user }) {
         setOpen={setJoinDialogOpen}
         groupTitle={group.title}
         onJoin={handleSendJoinRequest} 
+      />
+
+      <CreateEventDialog 
+        open={isCreateEventOpen} 
+        onOpenChange={setCreateEventOpen} 
+        groupId={groupId} 
       />
 
      

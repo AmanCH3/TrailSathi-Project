@@ -1,5 +1,5 @@
 import { useQuery , useMutation , useQueryClient } from "@tanstack/react-query";
-import { createOneGroupService , updateOneGroupService, getAllGroupService , getOneGroupService , deleteOneGroupService , joinOneGroupService, denyJoinRequestService, approveJoinRequestService, requestToJoinGroupService, getAllPendingRequestsService } from "../services/groupService";
+import { createOneGroupService , updateOneGroupService, getAllGroupService , getOneGroupService , deleteOneGroupService , joinOneGroupService, denyJoinRequestService, approveJoinRequestService, requestToJoinGroupService, getAllPendingRequestsService, createGroupEventService } from "../services/groupService";
 import { toast } from "react-toastify";
 import { useState } from "react";
 import { data } from "autoprefixer";
@@ -176,5 +176,21 @@ export const useDenyJoinRequest = () => {
         onError: (err) => {
             toast.error(err.message || "Action failed.");
         }
+    });
+};
+
+export const useCreateGroupEvent = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ groupId, data }) => createGroupEventService(groupId, data),
+        onSuccess: (data, variables) => {
+            toast.success("Event created successfully!");
+            queryClient.invalidateQueries({ queryKey: ['group_detail', variables.groupId] });
+            // If there's a specific query for events, invalidate that too.
+            // For now, group_detail likely contains everything or triggers re-fetch.
+        },
+        onError: (err) => {
+            toast.error(err.response?.data?.message || "Failed to create event");
+        },
     });
 };
