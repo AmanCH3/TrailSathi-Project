@@ -1,0 +1,292 @@
+/* Hiking-themed Loader Styles */
+
+.hiking-loader-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    padding: 2rem;
+}
+
+.hiking-loader {
+    position: relative;
+    width: 240px;
+    height: 140px;
+    margin-bottom: 1.5rem;
+}
+
+/* Mountains Animation */
+.mountains {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    z-index: 1;
+}
+
+.mountain {
+    color: #94a3b8;
+    opacity: 0;
+    animation: fadeInUp 1s ease-out forwards;
+}
+
+.mountain-1 {
+    animation-delay: 0s;
+}
+
+.mountain-2 {
+    animation-delay: 0.2s;
+    color: #64748b;
+}
+
+.mountain-3 {
+    animation-delay: 0.4s;
+    color: #94a3b8;
+}
+
+/* Trail Path Animation */
+.trail-path {
+    position: absolute;
+    top: 20px;
+    left: 0;
+    right: 0;
+    height: 100px;
+    z-index: 2;
+}
+
+.path-svg {
+    width: 100%;
+    height: 100%;
+    color: #22c55e;
+    opacity: 0.6;
+    filter: drop-shadow(0 2px 3px rgba(34, 197, 94, 0.2));
+}
+
+.animated-path {
+    stroke-dasharray: 12, 8;
+    animation: dash 1.5s linear infinite;
+}
+
+@keyframes dash {
+    to {
+        stroke-dashoffset: -40;
+    }
+}
+
+/* Hiker Animation */
+.hiker-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 3;
+    width: 40px;
+    height: 40px;
+    /* Use Motion Path to follow the SVG path exactly */
+    offset-path: path("M 10,100 Q 50,40 100,70 T 190,100");
+    animation: moveAlongPath 4s linear infinite;
+}
+
+/* Adjust SVG path to match the offset-path coordinate system if needed, 
+   or just approximate with keyframes if offset-path is tricky with responsive sizing.
+   Let's stick to a robust keyframe approximation for wider compatibility if needed,
+   but standard modern browsers support offset-path. 
+   
+   However, our SVG viewBox is 0 0 200 100.
+   The path in SVG is d="M 10,80 Q 50,20 100,50 T 190,80"
+   
+   Let's use specific keyframes to match the visual curve 'up and down'
+*/
+.hiker-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 3;
+    animation: hikeJourney 4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+.hiker-icon {
+    color: #ea580c;
+    /* Orange-600 */
+    filter: drop-shadow(0 4px 6px rgba(234, 88, 12, 0.3));
+    animation: hikerBounce 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes hikeJourney {
+    0% {
+        left: 5%;
+        top: 75%;
+        /* Start low */
+        transform: rotate(-5deg);
+    }
+
+    25% {
+        top: 45%;
+        /* Peak of first hill */
+        transform: rotate(5deg);
+    }
+
+    50% {
+        left: 50%;
+        top: 50%;
+        /* Valley */
+        transform: rotate(0deg);
+    }
+
+    75% {
+        top: 75%;
+        /* Low again */
+        transform: rotate(-5deg);
+    }
+
+    100% {
+        left: 90%;
+        top: 75%;
+        /* End */
+        transform: rotate(0deg);
+    }
+}
+
+@keyframes hikerBounce {
+    from {
+        transform: translateY(0) scale(1);
+    }
+
+    to {
+        transform: translateY(-4px) scale(1.1);
+    }
+}
+
+/* Trees Animation - Pop in sequentially */
+.trees {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 30px;
+    z-index: 1;
+}
+
+.tree {
+    color: #15803d;
+    /* Green-700 */
+    transform-origin: bottom center;
+    animation: sway 3s ease-in-out infinite;
+}
+
+.tree-1 {
+    animation-delay: 0s;
+}
+
+.tree-2 {
+    animation-delay: 1s;
+}
+
+.tree-3 {
+    animation-delay: 2s;
+}
+
+@keyframes sway {
+
+    0%,
+    100% {
+        transform: rotate(-3deg);
+    }
+
+    50% {
+        transform: rotate(3deg);
+    }
+}
+
+/* Sun - Warm pulse */
+.sun-pulse {
+    position: absolute;
+    top: 15px;
+    right: 25px;
+    width: 36px;
+    height: 36px;
+    background: radial-gradient(circle, #fcd34d 30%, #f59e0b 70%);
+    border-radius: 50%;
+    box-shadow: 0 0 25px rgba(251, 191, 36, 0.6);
+    animation: sunGlow 4s ease-in-out infinite alternate;
+}
+
+@keyframes sunGlow {
+    from {
+        opacity: 0.8;
+        transform: scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1.1);
+        box-shadow: 0 0 40px rgba(251, 191, 36, 0.8);
+    }
+}
+
+/* Loading Text with typing effect */
+.loading-text {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #4b5563;
+    margin-top: 0.5rem;
+    letter-spacing: 0.025em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+}
+
+/* Simple Spinner Loader */
+.hiking-loader-simple {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.spinner-trail {
+    animation: spin 2s linear infinite;
+}
+
+.spinner-icon {
+    color: #10b981;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .hiking-loader {
+        width: 200px;
+        height: 120px;
+    }
+
+    .mountain {
+        width: 40px;
+        height: 40px;
+    }
+
+    .hiker-icon {
+        width: 24px;
+        height: 24px;
+    }
+
+    .tree {
+        width: 28px;
+        height: 28px;
+    }
+}

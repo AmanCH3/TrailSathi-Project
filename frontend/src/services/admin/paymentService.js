@@ -1,10 +1,10 @@
 import axios from "axios";
 import { getAllPaymentHistory } from "../../api/admin/paymentApi";
 
-export const getAllPaymentHistoryService = async () => {
+export const getAllPaymentHistoryService = async (params = {}) => {
 
     try {
-        const response = await getAllPaymentHistory()
+        const response = await getAllPaymentHistory(params)
         return response.data
     }
     catch (err){

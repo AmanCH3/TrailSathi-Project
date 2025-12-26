@@ -4,14 +4,21 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Textarea } from "@/components/ui/textarea"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarChart, Bar } from "recharts"
 // === Icon Imports Added ===
-import { Users, Mountain, DollarSign, TrendingUp, Calendar, Clock, Loader2, X, Check, UserPlus } from "lucide-react"
+import { Users, Mountain, DollarSign, TrendingUp, Calendar, Clock, Loader2, X, Check, UserPlus, CheckCircle, XCircle, Users2 } from "lucide-react"
 import { useGetAllPendingRequests, useApproveJoinRequest, useDenyJoinRequest } from "../../hooks/useGroup"
 import { useAnalytics } from "../../hooks/useAnalytics"
 import { useRecentActivity } from "../../hooks/useActivity"
 import { formatDistanceToNow } from 'date-fns'
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import axios from "axios"
+import { useState } from "react"
+
+const API_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5050/api"
 
 // Helper function to format percentage change
 const formatPercentage = (change) => {
@@ -34,21 +41,92 @@ const getActivityIcon = (type) => {
             return <UserPlus {...iconProps} />;
         case 'group_created':
             return <Users {...iconProps} />;
-        // Add more cases here as your activity types grow
-        // case 'hike_completed':
-        //     return <CheckCircle {...iconProps} />;
+        case 'hike_planned':
+            return <Calendar {...iconProps} />;
+        case 'hike_completed':
+            return <Mountain {...iconProps} />;
+        case 'review_posted':
+            return <TrendingUp {...iconProps} />;
+        case 'post_created':
+            return <Users {...iconProps} />;
+        case 'event_created':
+            return <Calendar {...iconProps} />;
+        case 'payment_made':
+            return <DollarSign {...iconProps} />;
         default:
-            return null; // Don't show an icon for unknown types
+            return null;
     }
 }
 // === END: New Helper function for Icons ===
 
+// ===  PENDING GROUPS API FUNCTIONS ===
+const getPendingGroups = async () => {
+  const token = localStorage.getItem('token')
+  const { data } = await axios.get(`${API_URL}/groups/pending-groups`, {
+    headers: { Authorization: `Bearer ${token}` }
+  })
+  return data.data.groups
+}
+
+const approveGroup = async (groupId) => {
+  const token = localStorage.getItem('token')
+  const { data } = await axios.patch(`${API_URL}/groups/${groupId}/approve`, {}, {
+    headers: { Authorization: `Bearer ${token}` }
+  })
+  return data
+}
+
+const rejectGroup = async ({ groupId, reason }) => {
+  const token = localStorage.getItem('token')
+  const { data } = await axios.patch(`${API_URL}/groups/${groupId}/reject`, 
+    { reason },
+    { headers: { Authorization: `Bearer ${token}` } }
+  )
+  return data
+}
+
 export function DashboardHome() {
+  const queryClient = useQueryClient()
+  const [rejectingGroupId, setRejectingGroupId] = useState(null)
+  const [rejectionReason, setRejectionReason] = useState("")
+  
   const { data: pendingRequestsData, isLoading: isLoadingRequests } = useGetAllPendingRequests();
   const { data: analyticsData, isLoading: isLoadingAnalytics } = useAnalytics();
   const { data: recentActivityData, isLoading: isLoadingActivity } = useRecentActivity();
   const approveMutation = useApproveJoinRequest();
   const denyMutation = useDenyJoinRequest();
+
+  // Pending groups query
+  const { data: pendingGroups = [], isLoading: isLoadingGroups } = useQuery({
+    queryKey: ['pending-groups'],
+    queryFn: getPendingGroups,
+  })
+
+  // Group approve mutation
+  const approveGroupMutation = useMutation({
+    mutationFn: approveGroup,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pending-groups'] })
+      alert('Group approved successfully!')
+    },
+    onError: (error) => {
+      alert(error.response?.data?.message || 'Failed to approve group')
+    }
+  })
+
+  // Group reject mutation
+  const rejectGroupMutation = useMutation({
+    mutationFn: rejectGroup,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pending-groups'] })
+      setRejectingGroupId(null)
+      setRejectionReason("")
+      alert('Group rejected successfully!')
+    },
+    onError: (error) => {
+      alert(error.response?.data?.message || 'Failed to reject group')
+    }
+  })
 
   const pendingJoinRequests = pendingRequestsData?.data || [];
   const recentActivities = recentActivityData || [];
@@ -61,6 +139,20 @@ export function DashboardHome() {
   const handleDenyRequest = (requestId, groupId) => {
     denyMutation.mutate({ requestId, groupId });
   };
+
+  const handleApproveGroup = (groupId) => {
+    if (confirm('Are you sure you want to approve this group?')) {
+      approveGroupMutation.mutate(groupId)
+    }
+  }
+
+  const handleRejectGroup = (groupId) => {
+    if (!rejectionReason.trim()) {
+      alert('Please provide a reason for rejection')
+      return
+    }
+    rejectGroupMutation.mutate({ groupId, reason: rejectionReason })
+  }
 
   const getDifficultyColor = (difficulty) => {
     if (!difficulty) return 'text-gray-600 bg-gray-50';
@@ -198,10 +290,10 @@ export function DashboardHome() {
                     <Calendar className="h-5 w-5" />
                     Recent Activity
                 </CardTitle>
-                <CardDescription>Latest user actions and system updates</CardDescription>
+                <CardDescription>All user logs and system activities</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-4 max-h-[500px] overflow-y-auto">
                     {isLoadingActivity ? (
                         <div className="flex justify-center items-center py-4">
                             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -228,13 +320,19 @@ export function DashboardHome() {
                                                 {getActivityIcon(activity.type)}
                                                 {activity.type === 'user_joined' && 'joined the community.'}
                                                 {activity.type === 'group_created' && 'created a new group.'}
+                                                {activity.type === 'hike_planned' && `planned a hike to ${activity.trail}.`}
+                                                {activity.type === 'hike_completed' && `completed a hike to ${activity.trail}.`}
+                                                {activity.type === 'review_posted' && `posted a review for ${activity.trail}.`}
+                                                {activity.type === 'post_created' && (activity.trail ? `created a post in ${activity.trail}.` : 'created a post.')}
+                                                {activity.type === 'event_created' && `created an event.`}
+                                                {activity.type === 'payment_made' && `made a payment of ${activity.trail}.`}
                                             </p>
                                             <p className="text-xs text-muted-foreground">
                                                 {formatDistanceToNow(new Date(activity.time), { addSuffix: true })}
                                             </p>
                                         </div>
                                     </div>
-                                    {activity.trail && (
+                                    {activity.trail && (activity.type === 'group_created') && (
                                         <div className="border rounded-md p-2 bg-gray-50/50">
                                             <p className="text-sm font-medium text-gray-800">{activity.trail}</p>
                                         </div>
@@ -248,69 +346,151 @@ export function DashboardHome() {
         </Card>
         {/* === END: RECENT ACTIVITY CARD WITH ICONS === */}
 
+        {/* Pending Group Approvals - Right Side */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Pending Join Requests
+              <Users2 className="h-5 w-5" />
+              Pending Group Approvals
             </CardTitle>
-            <CardDescription>Group join requests awaiting approval</CardDescription>
+            <CardDescription>Review and approve group creation requests</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4 max-h-[300px] overflow-y-auto">
-              {isLoadingRequests ? (
+            <div className="space-y-4 max-h-[500px] overflow-y-auto">
+              {isLoadingGroups ? (
                 <div className="flex justify-center items-center py-4">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
-              ) : pendingJoinRequests.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No pending requests
-                </p>
+              ) : pendingGroups.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8">
+                  <CheckCircle className="h-12 w-12 text-green-500 mb-2" />
+                  <p className="text-sm text-muted-foreground">No pending groups to review</p>
+                </div>
               ) : (
-                pendingJoinRequests.map((request) => (
-                  <div key={request._id} className="border rounded-lg p-3 space-y-2">
+                pendingGroups.map((group) => (
+                  <div key={group._id} className="border rounded-lg p-4 space-y-3 bg-gray-50/50">
                     <div className="flex items-start justify-between">
-                      <div className="space-y-1 flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium text-sm">{request.group?.title}</span>
-                          <span className="text-xs text-muted-foreground">•</span>
-                          <span className="text-xs text-muted-foreground">{request.group?.trail?.name}</span>
+                      <div className="flex items-start gap-3 flex-1">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={group.owner?.profileImage} />
+                          <AvatarFallback>{group.owner?.name?.charAt(0) || 'U'}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-semibold text-sm">{group.name}</h4>
+                            <Badge variant="outline" className="text-xs">
+                              <Clock className="h-3 w-3 mr-1" />
+                              Pending
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            by <span className="font-medium">{group.owner?.name}</span>
+                            {' • '}
+                            {new Date(group.createdAt).toLocaleDateString()}
+                          </p>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <span>{new Date(request.group?.date).toLocaleDateString()}</span>
-                          <span>•</span>
-                          <span className={`px-2 py-1 rounded-full font-medium text-xs ${getDifficultyColor(request.group?.trail?.difficult)}`}>
-                            {request.group?.trail?.difficult}
-                          </span>
-                        </div>
-                        <div className="text-sm">
-                          <span className="font-medium">{request.user?.name}</span>
-                          <span className="text-muted-foreground"> requested to join.</span>
-                        </div>
-                        {request.message && (
-                            <p className="text-xs text-gray-600 bg-gray-50 p-2 rounded-md border">"{request.message}"</p>
-                        )}
                       </div>
-                      <div className="flex items-center gap-1 ml-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleApproveRequest(request._id, request.group._id)}
-                          disabled={approveMutation.isPending || denyMutation.isPending}
-                          className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
-                        >
-                          <Check className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDenyRequest(request._id, request.group._id)}
-                          disabled={approveMutation.isPending || denyMutation.isPending}
-                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
+                    </div>
+
+                    {group.description && (
+                      <p className="text-sm text-gray-700">{group.description}</p>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      {group.location && (
+                        <div>
+                          <span className="font-semibold">Location:</span> {group.location}
+                        </div>
+                      )}
+                      <div>
+                        <span className="font-semibold">Privacy:</span>{' '}
+                        <Badge variant="secondary" className="text-xs">{group.privacy}</Badge>
                       </div>
+                    </div>
+
+                    {group.tags && group.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {group.tags.map((tag, idx) => (
+                          <Badge key={idx} variant="outline" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="border-t pt-3">
+                      {rejectingGroupId === group._id ? (
+                        <div className="space-y-2">
+                          <label className="text-xs font-medium">Rejection Reason</label>
+                          <Textarea
+                            value={rejectionReason}
+                            onChange={(e) => setRejectionReason(e.target.value)}
+                            placeholder="Provide a reason for rejecting this group..."
+                            rows={2}
+                            className="text-sm resize-none"
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={() => handleRejectGroup(group._id)}
+                              disabled={rejectGroupMutation.isPending}
+                              variant="destructive"
+                              size="sm"
+                              className="text-xs"
+                            >
+                              {rejectGroupMutation.isPending ? (
+                                <>
+                                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                  Rejecting...
+                                </>
+                              ) : (
+                                <>
+                                  <XCircle className="mr-1 h-3 w-3" />
+                                  Confirm Reject
+                                </>
+                              )}
+                            </Button>
+                            <Button
+                              onClick={() => {
+                                setRejectingGroupId(null)
+                                setRejectionReason("")
+                              }}
+                              variant="outline"
+                              size="sm"
+                              className="text-xs"
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => handleApproveGroup(group._id)}
+                            disabled={approveGroupMutation.isPending}
+                            className="flex-1 bg-green-600 hover:bg-green-700 text-xs h-8"
+                          >
+                            {approveGroupMutation.isPending ? (
+                              <>
+                                <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                Approving...
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle className="mr-1 h-3 w-3" />
+                                Approve
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            onClick={() => setRejectingGroupId(group._id)}
+                            variant="outline"
+                            className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50 text-xs h-8"
+                          >
+                            <XCircle className="mr-1 h-3 w-3" />
+                            Reject
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))

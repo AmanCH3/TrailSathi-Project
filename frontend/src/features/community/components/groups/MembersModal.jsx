@@ -83,27 +83,28 @@ export const MembersModal = ({ isOpen, onClose, groupId, onMessageMember }) => {
           <div className="max-h-[500px] overflow-y-auto">
             {data.members.map((member) => (
               <div
-                key={member.id || member._id}
+                key={member._id}
                 className="group flex items-center justify-between p-4 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0"
               >
                 <div className="flex items-center gap-4">
                   <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gray-100 border border-gray-100 flex-shrink-0">
-                    {member.avatar && member.avatar !== '/default-avatar.jpg' ? (
+                    {member.user?.profileImage ? (
                       <img
-                        src={member.avatar}
-                        alt={member.name}
+                        src={`http://localhost:5050/${member.user.profileImage}`}
+                        alt={member.user?.name}
                         className="w-full h-full object-cover"
+                        onError={(e) => { e.target.src = '/default-avatar.jpg'; }} 
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-500 font-bold text-lg">
-                        {member.name?.charAt(0)?.toUpperCase() || 'M'}
+                        {member.user?.name?.charAt(0)?.toUpperCase() || '?'}
                       </div>
                     )}
                   </div>
 
                   <div>
                     <div className="flex items-center gap-2">
-                        <p className="text-gray-900 font-semibold text-base">{member.name}</p>
+                        <p className="text-gray-900 font-semibold text-base">{member.user?.name || 'Unknown User'}</p>
                         {getRoleBadge(member)}
                     </div>
                     {/* Optional: Add location or join date if available for more context, or keep minimal */}

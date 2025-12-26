@@ -5,6 +5,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useJoinTrailWithDate } from "../../hooks/admin/useAdminTrail";
 import confetti from "canvas-confetti";
 import { MoveRight } from "lucide-react"; // Icon for Hiker
+import { HikingLoader } from "../common/HikingLoader";
 
 export function JoinTrailDialog({ trail, isOpen, onOpenChange }) {
   const [date, setDate] = useState(new Date());
@@ -71,14 +72,7 @@ export function JoinTrailDialog({ trail, isOpen, onOpenChange }) {
         {/* LOADING STATE - WALKING CARTOON */}
         {isPending && (
           <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm">
-            <div className="relative w-full overflow-hidden h-32">
-                <div className="absolute top-1/2 left-0 animate-walk text-4xl">
-                     🚶‍♂️
-                </div>
-                {/* Simple 'Trail' Line */}
-                <div className="absolute top-2/3 w-full border-b-2 border-dashed border-gray-300"></div>
-            </div>
-            <h3 className="text-xl font-bold text-gray-700 mt-4 animate-pulse">Hiking to the server...</h3>
+            <HikingLoader text="Hiking to the server..." />
           </div>
         )}
 

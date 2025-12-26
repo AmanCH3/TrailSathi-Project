@@ -315,31 +315,32 @@ exports.joinTrailWithDate = catchAsync(async (req, res, next) => {
 
   // 3. Create In-App Notification
   await Notification.create({
-    user: req.user.id,
-    type: 'INFO',
+    recipient: req.user.id,
+    type: 'system',
     title: 'Hike Scheduled!',
     message: `You have successfully scheduled a hike on ${trail.name} for ${new Date(hikeDate).toDateString()}.`,
-    metadata: {
-        trailId: trail._id,
-        soloHikeId: newSoloHike._id
-    }
+    link: `/trails/${trail._id}`
   });
 
-  // 4. Update User's Joined Trails
-  await User.findByIdAndUpdate(
-    req.user.id,
-    {
-      $addToSet: { 
-        joinedTrails: { 
+  // 4. Update User's Joined Trails (Refactored to document pattern for achievement check)
+  const user = await User.findById(req.user.id);
+  
+  // Add subdoc if not exists
+  const alreadyJoined = user.joinedTrails.some(jt => jt.trail.toString() === trail._id.toString());
+  if (!alreadyJoined) {
+     user.joinedTrails.push({
            trail: trail._id,
            scheduledDate: hikeDate 
-        } 
-      }
-    },
-    { new: true, runValidators: true }
-  );
+     });
+     // Increment stats
+     user.stats.hikesJoined += 1; // Assuming we track this
+  }
+  
+  // Check Achievements (First Steps)
+  await checkAndUnlockAchievements(user);
+  await user.save({ validateBeforeSave: false });
 
-  // 4. Send Confirmation Email
+  // 5. Send Confirmation Email
   try {
     await sendEmail({
       email: req.user.email,
@@ -348,7 +349,6 @@ exports.joinTrailWithDate = catchAsync(async (req, res, next) => {
     });
   } catch (err) {
     console.error('Failed to send email:', err);
-    // Don't fail the request if email fails, just log it.
   }
 
   res.status(201).json({
@@ -360,22 +360,60 @@ exports.joinTrailWithDate = catchAsync(async (req, res, next) => {
   });
 });
 
+const { checkAndUnlockAchievements } = require('./../utils/achievementUtils');
+
+// ... (existing imports, but inserted new one at top usually)
+
 exports.completeTrail = catchAsync(async (req, res, next) => {
-  const soloHike = await SoloHike.findByIdAndUpdate(
-    req.params.id, 
-    { status: 'completed', endDateTime: Date.now() },
-    { new: true }
-  );
+  // 1. Find the scheduled SoloHike for this user and trail
+  const soloHike = await SoloHike.findOne({
+      user: req.user.id,
+      trail: req.params.id,
+      status: 'planned'
+  }).populate('trail');
 
   if (!soloHike) {
-    return next(new AppError('No scheduled hike found with that ID.', 404));
+    return next(new AppError('No active planned hike found for this trail.', 404));
   }
+  
+  // Update status
+  soloHike.status = 'completed';
+  soloHike.endDateTime = Date.now();
+  await soloHike.save();
+
+  // 2. Update User's Completed Trails and Stats
+  const user = await User.findById(req.user.id);
+  
+  // Add to completedTrails if not already there
+  const isAlreadyCompleted = user.completedTrails.some(ct => ct.trail.toString() === soloHike.trail._id.toString());
+  
+  if (!isAlreadyCompleted) {
+      user.completedTrails.push({
+          trail: soloHike.trail._id,
+          completedAt: Date.now()
+      });
+
+      // Update Stats
+      user.stats.totalHikes += 1;
+      user.stats.totalDistance += soloHike.trail.length || 0;
+      user.stats.totalElevation += soloHike.trail.elevationGain || 0;
+      user.stats.totalHours += soloHike.trail.duration || 0;
+  }
+
+  // Remove from joinedTrails
+  user.joinedTrails = user.joinedTrails.filter(jt => jt.trail.toString() !== soloHike.trail._id.toString());
+  
+  // Check for Achievements
+  await checkAndUnlockAchievements(user);
+
+  await user.save({ validateBeforeSave: false });
 
   res.status(200).json({
     status: 'success',
     message: 'Trail marked as complete!',
     data: {
-      soloHike
+      soloHike,
+      stats: user.stats
     }
   });
 });

@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { MessageCircle, Calendar } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { messagesService } from '../../services/messagesService';
 import { useMessages, useSendMessage, useMarkAsRead, useConversation } from '../../hooks/useMessages';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
@@ -14,6 +16,40 @@ export const MessageThread = ({ conversationId, participant, currentUserId }) =>
   const { data: conversationDetails } = useConversation(conversationId);
   const sendMutation = useSendMessage();
   const markReadMutation = useMarkAsRead();
+
+  // Derive participant if not provided (e.g., direct navigation)
+  // Derive participant if not provided (e.g., direct navigation)
+  const displayParticipant = participant || conversationDetails?.conversation?.participants?.find(
+      p => (p._id || p.id).toString() !== String(currentUserId)
+  );
+
+  const queryClient = useQueryClient();
+
+  // Listen for real-time messages
+  useEffect(() => {
+    const unsub = messagesService.onNewMessage((data) => {
+      // If the incoming message belongs to this conversation
+      if (data.conversation === conversationId) {
+        queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
+        queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      }
+    });
+    return unsub;
+  }, [conversationId, queryClient]);
+  // Note: conversationDetails structure from hook usually is data.conversation? 
+  // checking hook usage: data = useConversation(). data is the response body?
+  // Controller returns { data: { conversation } }.
+  // So useConversation returns { data, ... }. 
+  // But wait, the hook returns `useQuery` result.
+  // `data` from useQuery will be the JSON response: { success: true, data: { conversation: ... } }
+  // So `conversationDetails` in my code (line 14) is storing `data` from query.
+  // So it corresponds to the whole response object?
+  // Let's check `useConversation` hook again.
+  // `queryFn: () => messagesService.getConversation(id)`
+  // `messagesService` usually returns `response.data`.
+  // If `messagesService` returns `response.data`, then `data` is `{ success, data: { conversation } }`.
+  // So `conversationDetails.data.conversation`.
+  // Let me verify `messagesService.getConversation`.
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -56,20 +92,20 @@ export const MessageThread = ({ conversationId, participant, currentUserId }) =>
       <div className="px-6 py-4 border-b border-gray-100 bg-white/80 backdrop-blur-sm sticky top-0 z-10 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 ring-2 ring-emerald-50">
-            {participant?.avatar ? (
+            {displayParticipant?.profileImage || displayParticipant?.avatar ? (
               <img
-                src={getAssetUrl(participant.avatar)}
-                alt={participant.name}
+                src={getAssetUrl(displayParticipant.profileImage || displayParticipant.avatar)}
+                alt={displayParticipant.name}
                 className="w-full h-full object-cover"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-emerald-100 text-emerald-700 font-bold">
-                {participant?.name?.charAt(0)?.toUpperCase() || 'U'}
+                {displayParticipant?.name?.charAt(0)?.toUpperCase() || 'U'}
               </div>
             )}
           </div>
           <div>
-            <h3 className="font-bold text-gray-900 text-sm md:text-base">{participant?.name || 'Unknown'}</h3>
+            <h3 className="font-bold text-gray-900 text-sm md:text-base">{displayParticipant?.name || 'Unknown'}</h3>
              <span className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                 <span className="text-xs text-gray-500 font-medium">Online</span>
@@ -119,8 +155,8 @@ export const MessageThread = ({ conversationId, participant, currentUserId }) =>
                 key={message.id || message._id}
                 message={message}
                 isOwn={(message.senderId || message.sender?.id || message.sender?._id) === currentUserId}
-                senderAvatar={participant?.avatar}
-                senderName={participant?.name}
+                senderAvatar={displayParticipant?.profileImage || displayParticipant?.avatar}
+                senderName={displayParticipant?.name}
               />
             ))}
             <div ref={messagesEndRef} />

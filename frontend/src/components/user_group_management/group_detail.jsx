@@ -219,34 +219,28 @@ import {
 } from "../../hooks/useGroup";
 import { toast } from "react-toastify";
 import { JoinGroupDialog } from "./join_group_dailog";
-import { GroupChat } from "./group_chat";
+import { CreateEventDialog } from "./create_event_dialog";
+import { EditGroupModal } from "@/features/community/components/groups/EditGroupModal";
+import { MessageCircle } from "lucide-react";
+import { useCreateConversation } from "../../hooks/useChatAppliction"; // Assuming we will create this hook or use service directly
 
-
-
-
-const formatDuration = (duration) => {
-    if (!duration) return 'N/A';
-    if (typeof duration === 'object' && duration.min !== undefined && duration.max !== undefined) {
-        if (duration.min === duration.max) return `${duration.max} hours`;
-        return `${duration.min}-${duration.max} hours`;
-    }
-    return `${duration} hours`;
-};
-
-// Helper to get the correct color for the difficulty badge
-const getDifficultyBadgeColor = (difficulty) => {
-    switch (difficulty) {
-        case 'Easy': return 'bg-green-100 text-green-800 hover:bg-green-100';
-        case 'Moderate': return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100';
-        case 'Difficult': return 'bg-red-100 text-red-800 hover:bg-red-100'; // Corrected 'Hard' to 'Difficult'
-        default: return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
-    }
-}
+// ... existing imports
 
 export function GroupDetails({ group, user }) {
 
 
    const [isJoinDialogOpen, setJoinDialogOpen] = useState(false);
+   const [isCreateEventOpen, setCreateEventOpen] = useState(false);
+   const [isEditGroupOpen, setEditGroupOpen] = useState(false);
+   
+   console.log("GroupDetails Debug: ", {
+        leaderId: group?.leader?._id,
+        userId: user?._id,
+        isMatch: group?.leader?._id === user?._id,
+        leaderObject: group?.leader,
+        userObject: user
+   });
+
   if (!group) {
     return <div className="text-center text-gray-500 mt-10">Group data is not available.</div>;
   }
@@ -278,7 +272,7 @@ export function GroupDetails({ group, user }) {
   const displayDate = new Date(date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   
   // Filter confirmed participants
-  const confirmedParticipants = participants.filter(p => p.status === 'confirmed');
+  const confirmedParticipants = participants.filter(p => p.status === 'active');
   const currentSize = confirmedParticipants.length;
   const isGroupFull = currentSize >= maxSize;
   
@@ -296,6 +290,8 @@ export function GroupDetails({ group, user }) {
   const handleApprove = (requestId) => approveMutation.mutate({ groupId, requestId });
   const handleDeny = (requestId) => denyMutation.mutate({groupId, requestId });
 
+  const createConversationMutation = useCreateConversation();
+
   const handleDeleteGroup = async () => {
     if(confirm("Are you sure you want to delete this group? This cannot be undone.")) {
         deleteGroupMutation.mutate(groupId, {
@@ -307,6 +303,19 @@ export function GroupDetails({ group, user }) {
             }
         });
     }
+  };
+  
+  const handleMessageUser = (recipientId) => {
+      createConversationMutation.mutate({ recipientId }, {
+          onSuccess: (conversation) => {
+              // Redirect to messenger with new conversation
+              window.location.href = `/messenger/${conversation._id}`;
+          },
+          onError: (error) => {
+              toast.error("Failed to start conversation");
+              console.error(error);
+          }
+      });
   };
 
    const canViewChat = isCurrentUserLeader || isCurrentUserConfirmedParticipant;
@@ -320,14 +329,48 @@ export function GroupDetails({ group, user }) {
         onJoin={handleSendJoinRequest} 
       />
 
+      <CreateEventDialog 
+        open={isCreateEventOpen} 
+        onOpenChange={setCreateEventOpen} 
+        groupId={groupId} 
+      />
+
      
+
+      <EditGroupModal 
+        isOpen={isEditGroupOpen} 
+        onClose={() => setEditGroupOpen(false)} 
+        group={group} 
+        onUpdateSuccess={() => {
+            setEditGroupOpen(false);
+            // Ideally trigger a refetch here or let react-query handle it
+            window.location.reload(); // Temporary force refresh to see changes
+        }}
+      />
 
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 p-6 max-h-[90vh] overflow-y-auto">
       <div className="lg:col-span-2 space-y-8">
         <Card className="overflow-hidden">
+          {group.coverImage && (
+             <div className="h-64 w-full relative">
+                <img 
+                  src={`http://localhost:5050/${group.coverImage}`} 
+                  alt={title} 
+                  className="w-full h-full object-cover"
+                  onError={(e) => { e.target.style.display = 'none'; }} 
+                />
+             </div>
+          )}
           <CardContent className="p-6">
-            <div className="flex justify-between items-start mb-4">
-              <div>
+            <div className="flex justify-between items-start mb-4 relative">
+              <div className="flex-1">
+                 {/* Group Avatar Overlap */}
+                 <div className="-mt-16 mb-4">
+                    <Avatar className="h-24 w-24 border-4 border-white shadow-lg">
+                        <AvatarImage src={`http://localhost:5050/${group.avatar}`} alt={title} />
+                        <AvatarFallback>{title.substring(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                 </div>
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{title}</h1>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 text-sm text-gray-500 mt-2">
                   <div className="flex items-center gap-1.5"><CalendarDays className="h-4 w-4" /><span>{displayDate} at {displayTime}</span></div>
@@ -349,7 +392,7 @@ export function GroupDetails({ group, user }) {
                 <div className="space-y-3">
                     <Badge className="w-full justify-center py-2 text-lg bg-blue-50 text-purple-800">You are the leader!</Badge>
                     <div className="grid grid-cols-2 gap-3 pt-2">
-                         <Button variant="outline" className="w-full border-blue-200 text-blue-700 hover:bg-blue-50" onClick={() => toast.info("Edit Group Modal coming soon!")}>
+                         <Button variant="outline" className="w-full border-blue-200 text-blue-700 hover:bg-blue-50" onClick={() => setEditGroupOpen(true)}>
                             Edit Group
                          </Button>
                          <Button variant="outline" className="w-full border-green-200 text-green-700 hover:bg-green-50" onClick={() => toast.info("Create Event Modal coming soon!")}>
@@ -499,6 +542,17 @@ export function GroupDetails({ group, user }) {
                   </div>
                 </div>
                 <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Confirmed</Badge>
+                {/* Chat Button for other users */}
+                {user?._id !== p.user?._id && (
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="ml-2 h-8 w-8 text-gray-500 hover:text-blue-600"
+                        onClick={() => handleMessageUser(p.user?._id)}
+                    >
+                        <MessageCircle className="h-5 w-5" />
+                    </Button>
+                )}
               </div>
             ))}
           </div></CardContent>

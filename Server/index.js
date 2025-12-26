@@ -100,6 +100,12 @@ app.use('/api/groups', require('./routers/groupRoutes'));
 app.use('/api/conversations', require('./routers/conversationRoutes'));
 app.use('/api/posts', require('./routers/postRoutes')); // For direct access/feeds
 app.use('/api/events', require('./routers/eventRoutes')); // For direct access/calendars
+app.use('/api/weather', require('./routers/weatherRoutes'));
+app.use('/api/checklist', require('./routers/checklistRoutes'));
+app.use('/api/analytics', require('./routers/analyticsRoutes'));
+app.use('/api/activity', require('./routers/activityRoutes'));
+
+
 
 
 app.all(/(.*)/, (req, res, next) => {

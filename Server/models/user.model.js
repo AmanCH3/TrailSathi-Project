@@ -78,6 +78,10 @@ const UserSchema = new mongoose.Schema(
             hikesJoined: { type: Number, default: 0 }, 
             hikesLed: { type: Number, default: 0 }
         },
+        unlockedAchievements: {
+             type: [String],
+             default: []
+        },
         achievements: [{
             type: mongoose.Schema.ObjectId,
             ref: "Achievement",

@@ -8,7 +8,7 @@ import {
   MapPin, 
   Mountain, 
   Settings, 
-  Users 
+  Users
 } from "lucide-react"
 
 import {
@@ -53,16 +53,6 @@ const navigationData = {
           title: "Trail Management",
           url: "/admin/trail",
           icon: MapPin,
-        },
-        {
-          title: "Group Hikes",
-          url: "/admin/hikes",
-          icon: Mountain,
-        },
-        {
-          title: "Checklist Templates",
-          url: "/admin/checklists",
-          icon: CheckSquare,
         },
       ],
     },

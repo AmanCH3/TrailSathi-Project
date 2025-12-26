@@ -1,6 +1,6 @@
 
 import { socket } from '../../socket';
-import { getMessagesForGroup } from '../api/chatApplicationApi';
+import { getMessagesForGroup, createConversation as apiCreateConversation } from '../api/chatApplicationApi';
 
 const connect = () => {
   if (!socket.connected) {
@@ -42,13 +42,18 @@ const onMessageError = (callback) => {
   return () => socket.off('messageError', callback);
 };
 
+const createConversation = async (data) => {
+    return apiCreateConversation(data);
+};
+
 export const chatService = {
   connect,
   disconnect,
-  getMessages, // Use the corrected function
+  getMessages, 
   joinGroup,
   leaveGroup,
   sendMessage,
   onNewMessage,
   onMessageError,
+  createConversation, // Export it
 };

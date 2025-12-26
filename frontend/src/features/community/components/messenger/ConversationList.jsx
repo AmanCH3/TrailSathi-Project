@@ -4,7 +4,7 @@ import { ConversationItem } from './ConversationItem';
 import { SearchInput } from '../ui/SearchInput';
 import { Skeleton } from '../ui/Skeleton';
 import { EmptyState } from '../ui/EmptyState';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, ArrowLeft } from 'lucide-react';
 
 export const ConversationList = ({ activeConversationId, onSelectConversation }) => {
   const [search, setSearch] = useState('');
@@ -18,7 +18,16 @@ export const ConversationList = ({ activeConversationId, onSelectConversation })
     <div className="flex flex-col h-full bg-white border-r border-gray-100">
       {/* Header */}
       <div className="p-5 border-b border-gray-100">
-        <h2 className="text-xl font-bold text-gray-900 mb-4 tracking-tight">Messages</h2>
+        <div className="flex items-center gap-3 mb-4">
+            <button 
+                onClick={() => window.history.back()} 
+                className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500"
+                title="Go Back"
+            >
+                <ArrowLeft className="w-5 h-5" />
+            </button>
+            <h2 className="text-xl font-bold text-gray-900 tracking-tight">Messages</h2>
+        </div>
         <SearchInput
           placeholder="Search..."
           value={search}

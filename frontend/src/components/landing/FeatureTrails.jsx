@@ -242,17 +242,19 @@
 
 
 
-import { ArrowRight, Star, ChevronRight, CheckCircle, Clock } from "lucide-react";
+import { ArrowRight, Star, ChevronRight, CheckCircle, Clock, Bookmark } from "lucide-react";
 import { useAdminTrail } from "../../hooks/admin/useAdminTrail";
 import { useUserProfile } from "../../hooks/useUserProfile";
 import { Link, useNavigate } from "react-router-dom";
 import { ViewTrailDialog } from "../admin/trail_management/ViewTrailDailog";
 import { useState } from "react";
+import { useSavedTrails } from "../../context/SavedTrailsContext";
 
 const FeaturedTrails = () => {
   const navigate = useNavigate();
   const [selectedTrail, setSelectedTrail] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { saveTrail, unsaveTrail, isSaved } = useSavedTrails();
 
   // Fetch trails (limit 4 to match screenshot row)
   const { trails, isLoading, isError } = useAdminTrail({ limit: 4 });
@@ -326,9 +328,36 @@ const FeaturedTrails = () => {
                                 alt={trail.name} 
                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                              />
-                             {/* Planned Badge */}
+                             
+                             {/* Bookmark Icon - Right Side */}
+                             <button
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Prevent navigation
+                                  if (isSaved(trail._id)) {
+                                    unsaveTrail(trail._id);
+                                  } else {
+                                    saveTrail(trail);
+                                  }
+                                }}
+                                className={`absolute top-3 right-3 w-9 h-9 backdrop-blur-sm rounded-lg flex items-center justify-center transition-all duration-200 shadow-sm z-20 ${
+                                  isSaved(trail._id) 
+                                    ? 'bg-gray-900 hover:bg-black' 
+                                    : 'bg-white/90 hover:bg-white'
+                                }`}
+                                aria-label={isSaved(trail._id) ? "Remove from saved" : "Save trail"}
+                             >
+                                <Bookmark 
+                                  className={`w-5 h-5 transition-all ${
+                                    isSaved(trail._id) 
+                                      ? 'fill-white text-white' 
+                                      : 'text-gray-700'
+                                  }`}
+                                />
+                             </button>
+                             
+                             {/* Planned Badge - Moved to left since bookmark is on right */}
                              {isTrailJoined(trail._id) && (
-                                <div className="absolute top-3 right-3 bg-blue-600/90 backdrop-blur-sm text-white text-[10px] uppercase font-bold px-2.5 py-1 rounded shadow-sm z-10 flex items-center gap-1">
+                                <div className="absolute top-3 left-3 bg-blue-600/90 backdrop-blur-sm text-white text-[10px] uppercase font-bold px-2.5 py-1 rounded shadow-sm z-10 flex items-center gap-1">
                                     <Clock className="w-3 h-3" /> Planned
                                 </div>
                              )}

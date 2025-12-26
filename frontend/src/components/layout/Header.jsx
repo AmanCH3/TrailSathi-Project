@@ -4,13 +4,40 @@ import { FaBars, FaTimes, FaSearch, FaChevronDown, FaRegCompass } from "react-ic
 import { useAuth } from "@app/providers/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { ENV } from "@config/env";
+import { useSavedTrails } from "../../context/SavedTrailsContext";
 
 const API_URL = ENV.API_URL;
 
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { NotificationDropdown } from "./NotificationDropdown";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { User, LogOut } from "lucide-react";
+
+import WeatherWidget from "../common/WeatherWidget";
+
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
+  const { savedCount } = useSavedTrails();
+  
+  // Debugging user object
+  useEffect(() => {
+    console.log("Current User in Header:", user);
+  }, [user]);
+
+  // Helper to get initials
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  };
   
   return (
     <nav className="bg-gray-100/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 transition-all duration-300">
@@ -57,14 +84,71 @@ export default function Header() {
                 </div>
              </div>
 
-             <div className="cursor-pointer hover:text-black transition-colors">
-                <Link to="/saved">Saved</Link>
+             <div className="cursor-pointer hover:text-black transition-colors relative">
+                <Link to="/saved-trails" className="flex items-center gap-1.5">
+                  Saved
+                  {savedCount > 0 && (
+                    <span className="bg-green-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                      {savedCount}
+                    </span>
+                  )}
+                </Link>
              </div>
 
              {isAuthenticated ? (
-                 <div className="flex items-center gap-3 pl-2">
-                    <span className="text-gray-900 font-semibold">{user.name}</span>
-                    <Button onClick={logout} variant="outline" size="sm" className="h-9 px-4 rounded-md">Logout</Button>
+             <div className="flex items-center gap-4 pl-2">
+                 
+                 {user?.role === 'admin' ? (
+                   <>
+                      <Link to="/admin/dashboard">
+                        <Button 
+                          variant="ghost" 
+                          className="text-gray-600 hover:text-black hover:bg-transparent font-medium"
+                        >
+                          Admin Dashboard
+                        </Button>
+                      </Link>
+                      <Button 
+                        variant="ghost" 
+                        onClick={logout}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 font-medium"
+                      >
+                        Log out
+                      </Button>
+                   </>
+                 ) : (
+                   <>
+                     <NotificationDropdown />
+                     
+                     <DropdownMenu>
+                       <DropdownMenuTrigger className="focus:outline-none">
+                         <div className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer">
+                             <Avatar className="h-9 w-9 border border-gray-200">
+                                 <AvatarImage src={user.profileImage ? `${API_URL}/${user.profileImage}` : ''} alt={user.name} />
+                                 <AvatarFallback className="bg-green-100 text-green-700 text-xs">{getInitials(user.name)}</AvatarFallback>
+                             </Avatar>
+                             <span className="text-gray-900 font-semibold">{user.name}</span>
+                             <FaChevronDown className="text-gray-400 text-xs" />
+                         </div>
+                       </DropdownMenuTrigger>
+                       <DropdownMenuContent align="end" className="w-56">
+                         <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                         <DropdownMenuSeparator />
+                         <DropdownMenuItem asChild>
+                             <Link to="/profile" className="cursor-pointer w-full flex items-center">
+                                 <User className="mr-2 h-4 w-4" />
+                                 <span>Profile</span>
+                             </Link>
+                         </DropdownMenuItem>
+                         <DropdownMenuSeparator />
+                         <DropdownMenuItem onClick={logout} className="text-red-600 focus:text-red-600 cursor-pointer">
+                             <LogOut className="mr-2 h-4 w-4" />
+                             <span>Logout</span>
+                         </DropdownMenuItem>
+                       </DropdownMenuContent>
+                     </DropdownMenu>
+                   </>
+                 )}
                  </div>
              ) : (
                  <Link to="/signup">
@@ -101,7 +185,7 @@ export default function Header() {
                 <Link to="/trails" className="font-medium text-gray-700 py-2">Trails</Link>
                 <Link to="/checklist" className="font-medium text-gray-700 py-2">Checklist</Link>
                  <Link to="/community/groups" className="font-medium text-gray-700 py-2">Groups</Link>
-                <Link to="/saved" className="font-medium text-gray-700 py-2">Saved</Link>
+                <Link to="/saved-trails" className="font-medium text-gray-700 py-2">Saved</Link>
                 {isAuthenticated ? (
                      <button onClick={logout} className="text-red-600 text-left font-medium py-2">Logout</button>
                 ) : (

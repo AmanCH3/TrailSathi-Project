@@ -146,7 +146,7 @@ exports.verifyEsewaPayment = async (req, res) => {
 exports.getTransactionHistory = async (req, res) => {
     try {
         const userId = req.user._id;
-        const payments = await Payment.find({ userId, status: 'success' }).sort({ createdAt: -1 });
+        const payments = await Payment.find({ userId }).sort({ createdAt: -1 });
         return res.status(200).json({ success: true, data: payments });
     } catch (error) {
         console.error("Get transaction history error:", error);
@@ -156,21 +156,88 @@ exports.getTransactionHistory = async (req, res) => {
 
 exports.getAllTransactionHistory = async (req, res) => {
     try {
-        const allTransactions = await Payment.find({})
-        .populate('userId' , 'name email')
-        .sort({ createdAt: -1}) ;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const search = req.query.search || '';
+        const status = req.query.status || 'all';
+        const skip = (page - 1) * limit;
+
+        // Build query
+        let query = {};
+        
+        // Status filter
+        if (status !== 'all') {
+            query.status = status;
+        }
+
+        // Get all payments for search filtering (if search term provided)
+        let allTransactions = await Payment.find(query)
+            .populate('userId', 'name email')
+            .sort({ createdAt: -1 });
+
+        // Apply search filter if search term exists
+        if (search) {
+            const searchLower = search.toLowerCase();
+            allTransactions = allTransactions.filter(transaction => {
+                const userName = transaction.userId?.name?.toLowerCase() || '';
+                const userEmail = transaction.userId?.email?.toLowerCase() || '';
+                const transactionId = transaction.transaction_uuid?.toLowerCase() || '';
+                const plan = transaction.plan?.toLowerCase() || '';
+                
+                return userName.includes(searchLower) ||
+                       userEmail.includes(searchLower) ||
+                       transactionId.includes(searchLower) ||
+                       plan.includes(searchLower);
+            });
+        }
+
+        // Get total count after filtering
+        const total = allTransactions.length;
+        
+        // Apply pagination
+        const paginatedTransactions = allTransactions.slice(skip, skip + limit);
 
         return res.status(200).json({
-            success : true ,
-            data : allTransactions
-        }) ;
+            success: true,
+            data: paginatedTransactions,
+            pagination: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit)
+            }
+        });
 
-    }
-    catch(error) {
+    } catch(error) {
         console.error('Get transaction history error ', error);
         return res.status(500).json({
-            success : false ,
-            message : "Server error"
+            success: false,
+            message: "Server error"
         })
     }
 }
+
+exports.deleteTransaction = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const transactionId = req.params.id;
+
+        const transaction = await Payment.findOne({ transaction_uuid: transactionId });
+
+        if (!transaction) {
+            return res.status(404).json({ success: false, message: "Transaction not found" });
+        }
+
+        // Ensure the transaction belongs to the user
+        if (transaction.userId.toString() !== userId.toString()) {
+             return res.status(403).json({ success: false, message: "Not authorized to delete this transaction" });
+        }
+
+        await Payment.findOneAndDelete({ transaction_uuid: transactionId });
+
+        return res.status(200).json({ success: true, message: "Transaction deleted successfully" });
+    } catch (error) {
+        console.error("Delete transaction error:", error);
+        return res.status(500).json({ success: false, message: "Server Error" });
+    }
+};

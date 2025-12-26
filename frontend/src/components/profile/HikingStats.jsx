@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart3, TrendingUp, Compass, Clock, Users, UserCheck } from 'lucide-react';
+import { HikingChart } from './HikingChart';
 
 const StatCard = ({ title, value, icon: Icon }) => (
   <Card className="bg-white">
@@ -14,7 +15,7 @@ const StatCard = ({ title, value, icon: Icon }) => (
   </Card>
 );
 
-export function HikingStats({ stats }) {
+export function HikingStats({ stats, completedTrails }) {
   return (
     <div className="space-y-8">
       <Card>
@@ -33,15 +34,10 @@ export function HikingStats({ stats }) {
         </CardContent>
       </Card>
       
-      {/* Placeholder for the chart section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Activity Breakdown</CardTitle>
-        </CardHeader>
-        <CardContent className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-          <p className="text-gray-500">Charts coming soon!</p>
-        </CardContent>
-      </Card>
+      {/* Chart Section */}
+      <div className="grid grid-cols-1 gap-6">
+           <HikingChart completedTrails={completedTrails} />
+      </div>
     </div>
   );
 }

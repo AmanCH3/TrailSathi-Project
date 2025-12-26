@@ -14,6 +14,7 @@ import ChecklistManagementPage from "../pages/admin/ChecklistManagementPage";
 import GroupHikeManagementPage from "../pages/admin/GroupHikeManagement";
 import PaymentManagementPage from "../pages/admin/PaymentManagementPage";
 import TrailManagementPage from "../pages/admin/TrailManagement";
+import PendingGroupsPage from "../pages/admin/PendingGroupsPage";
 import AdminLayout from "../layouts/admin/AdminLayout";
 import GroupsPage from "../pages/GroupPage";
 import ProtectedRoute from "../components/protectedRoutes";
@@ -25,6 +26,7 @@ import EsewaSuccessPage from "../pages/EsewaSuccessPage";
 import ChecklistPage from "../pages/ChecklistPage";
 import ProfilePage from "../pages/ProfilePage";
 import GoogleAuthCallback from "../pages/GoogleAuthCallBack";
+import SavedTrailsPage from "../pages/SavedTrailsPage";
 
 // Community Feature Pages
 import { GroupsDiscoveryPage, GroupDetailPage, EventDetailPage, MessengerPage } from "../features/community";
@@ -59,6 +61,7 @@ export default function AppRouter() {
            <Route path="/auth/google/success" element={<GoogleAuthCallback />} />
           <Route path="groups" element={<GroupsPage />} />
           <Route path="payments" element={<PaymentsPage />} />
+          <Route path="saved-trails" element={<SavedTrailsPage />} />
 
           {/* Community Feature Routes */}
           <Route path="community/groups" element={<GroupsDiscoveryPage />} />
@@ -104,6 +107,7 @@ export default function AppRouter() {
           <Route path="hikes" element={<GroupHikeManagementPage />} />
           <Route path="payments" element={<PaymentManagementPage />} />
           <Route path="trail" element={<TrailManagementPage />} />
+          <Route path="pending-groups" element={<PendingGroupsPage />} />
           <Route path="groups/:groupId" element={<GroupDetails />} />
           
           {/* The incorrect checklist route has been removed from this section */}

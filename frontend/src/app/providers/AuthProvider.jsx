@@ -1,6 +1,8 @@
 import { createContext, useState, useEffect, useContext } from "react";
 import axios from 'axios';
 import { ENV } from '@config/env';
+import { messagesService } from "../../features/community/services/messagesService";
+import { toast } from 'react-toastify';
 
 export const AuthContext = createContext();
 
@@ -13,6 +15,7 @@ export const AuthContextProvider = ({ children }) => {
         localStorage.setItem("token", token);
         localStorage.setItem('role', userData.role);
         setUser(userData);
+        messagesService.connect();
     };
 
     const logout = () => {
@@ -20,6 +23,7 @@ export const AuthContextProvider = ({ children }) => {
         localStorage.removeItem("token");
         localStorage.removeItem("role");
         setUser(null);
+        messagesService.disconnect();
     };
 
     const refreshUser = async () => {
@@ -50,6 +54,37 @@ export const AuthContextProvider = ({ children }) => {
 
     useEffect(() => {
         refreshUser();
+        // Since refreshUser calls login, socket might be connected there.
+        // But if user is already logged in (persisted), refreshUser runs.
+        // We can also just ensure connect is called if token exists.
+        const token = localStorage.getItem("token");
+        if(token) {
+            messagesService.connect();
+        }
+        
+        return () => {
+            messagesService.disconnect();
+        }
+    }, []);
+
+    // Global Socket Event Listener
+    useEffect(() => {
+        const cleanup = messagesService.onNewMessage((data) => {
+            // Check if user is currently on the conversation page
+            const currentPath = window.location.pathname;
+            const isOnConversation = currentPath.includes(`/messenger/${data.conversation}`);
+            
+            // Only show notification if NOT on the specific conversation page
+            if (!isOnConversation) {
+                const senderName = data.sender?.name || 'Someone';
+                // Create a concise notification
+                toast.info(`New message from ${senderName}`, {
+                    onClick: () => window.location.href = `/messenger/${data.conversation}`
+                });
+            }
+        });
+
+        return cleanup;
     }, []);
 
     return (

@@ -17,6 +17,8 @@
   import { EditUserDialog } from "../../components/admin/user_management/EditUserDailog";
   import { DeleteUserDialog } from "../../components/admin/user_management/DeleteUserDailog";
   import { UserCard } from "../../components/admin/user_management/Usercard";
+  import { UserActivityDialog } from "../../components/admin/user_management/UserActivityDialog";
+  import { HikingLoader } from "../../components/common/HikingLoader";
 
   export default function UserManagementPage() {
     // --- 1. HOOKS PROVIDE ALL STATE & FUNCTIONS ---
@@ -43,7 +45,8 @@
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-    const[isViewOpen , setIsViewOpen] = useState(false)
+    const [isViewOpen , setIsViewOpen] = useState(false)
+    const [isActivityOpen, setIsActivityOpen] = useState(false)
     const [roleFilter, setRoleFilter] = useState("all");
 
     // --- FILTERING & HANDLERS ---
@@ -55,6 +58,7 @@
     const openEditDialog = (user) => { setSelectedUser(user); setIsEditOpen(true); };
     const openDeleteDialog = (user) => { setSelectedUser(user); setIsDeleteOpen(true); };
     const openViewDialog = (user) => {setSelectedUser(user); setIsViewOpen(true)}
+    const openActivityDialog = (user) => { setSelectedUser(user); setIsActivityOpen(true); };
     
     const handleCreate = (formData) => {
       createUser(formData, { onSuccess: () => setIsCreateOpen(false) });
@@ -117,9 +121,7 @@
         {/* Main Content Grid with Loading/Error/Empty States */}
         <div className="min-h-[400px]">
           {isLoading ? (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, i) => <UserCardSkeleton key={i} />)}
-            </div>
+            <HikingLoader text="Loading users" />
           ) : isError ? (
             <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-12 text-center">
               <AlertCircle className="h-10 w-10 text-destructive" />
@@ -135,6 +137,7 @@
                   onEdit={() => openEditDialog(user)}
                   onDelete={() => openDeleteDialog(user)}
                   onView={() => openViewDialog(user)}
+                  onViewActivity={() => openActivityDialog(user)}
                 />
               ))}
             </div>
@@ -187,6 +190,12 @@
            <ViewUserDialog open={ isViewOpen} onOpenChange={ setIsViewOpen} user={selectedUser}/>
             <EditUserDialog open={isEditOpen} onOpenChange={setIsEditOpen} user={selectedUser} onUpdate={handleUpdate} />
             <DeleteUserDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen} user={selectedUser} onDelete={handleDelete} />
+            <UserActivityDialog 
+              open={isActivityOpen} 
+              onOpenChange={setIsActivityOpen} 
+              userId={selectedUser._id} 
+              userName={selectedUser.name} 
+            />
           </>
         )}
       </div>

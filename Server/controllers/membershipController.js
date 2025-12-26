@@ -90,3 +90,66 @@ exports.getGroupMembers = catchAsync(async (req, res, next) => {
         }
     });
 });
+
+exports.requestToJoinGroup = catchAsync(async (req, res, next) => {
+    const group = await Group.findById(req.params.groupId);
+    if (!group) return next(new AppError('No group found', 404));
+
+    // Check existing
+    const existing = await GroupMembership.findOne({
+        group: req.params.groupId,
+        user: req.user.id
+    });
+    if (existing) {
+        if (existing.status === 'pending') return next(new AppError('Request already pending', 400));
+        return next(new AppError('Already a member', 400));
+    }
+
+    await GroupMembership.create({
+        group: req.params.groupId,
+        user: req.user.id,
+        role: 'member',
+        status: 'pending',
+        message: req.body.message || '' 
+    });
+
+    res.status(200).json({ success: true, message: 'Request sent successfully' });
+});
+
+exports.getAllPendingRequests = catchAsync(async (req, res, next) => {
+    const requests = await GroupMembership.find({ status: 'pending' })
+        .populate({
+            path: 'group',
+            select: 'name description memberCount'
+        })
+        .populate('user', 'name profileImage')
+        .sort('-createdAt');
+
+    res.status(200).json({
+        success: true,
+        data: requests
+    });
+});
+
+exports.approveJoinRequest = catchAsync(async (req, res, next) => {
+    const { groupId, requestId } = req.params;
+    
+    const membership = await GroupMembership.findById(requestId);
+    if (!membership) return next(new AppError('Request not found', 404));
+
+    membership.status = 'active';
+    await membership.save();
+
+    await Group.findByIdAndUpdate(groupId, { $inc: { memberCount: 1 } });
+
+    res.status(200).json({ success: true, message: 'Request approved', data: { groupId } });
+});
+
+exports.denyJoinRequest = catchAsync(async (req, res, next) => {
+    const { groupId, requestId } = req.params;
+    
+    const membership = await GroupMembership.findByIdAndDelete(requestId);
+    if (!membership) return next(new AppError('Request not found', 404));
+
+    res.status(200).json({ success: true, message: 'Request denied', data: { groupId } });
+});

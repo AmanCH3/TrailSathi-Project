@@ -23,6 +23,10 @@ const GroupSchema = new mongoose.Schema({
     type: String,
     default: 'default_group_cover.jpg' 
   },
+  avatar: {
+    type: String,
+    default: 'default_group_avatar.jpg' // Or null
+  },
   tags: [String],
   owner: {
     type: mongoose.Schema.ObjectId,
@@ -44,6 +48,24 @@ const GroupSchema = new mongoose.Schema({
   upcomingEventCount: {
     type: Number,
     default: 0
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending'
+  },
+  reviewedBy: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User',
+    default: null
+  },
+  approvalDate: {
+    type: Date,
+    default: null
+  },
+  rejectionReason: {
+    type: String,
+    default: null
   }
 }, {
   timestamps: true,

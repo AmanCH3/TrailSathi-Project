@@ -70,14 +70,14 @@ router
   );
 
 router
-  .route('/joined/:id/complete')
+  .route('/:id/complete')
   .post(
     authController.protect,
     trailController.completeTrail
   );
 
 router
-  .route('/joined/:id/cancel')
+  .route('/:id/cancel')
   .delete(
     authController.protect,
     trailController.cancelJoinedTrail

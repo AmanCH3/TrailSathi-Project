@@ -1,78 +1,54 @@
-// controllers/notificationController.js
 const Notification = require('./../models/notification.model');
 const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
 
-// GET /api/notifications?unread=true
 exports.getMyNotifications = catchAsync(async (req, res, next) => {
-  const filter = { user: req.user.id };
-
-  // optional unread filter
-  if (req.query.unread === 'true') {
-    filter.read = false;
-  }
-
-  const notifications = await Notification.find(filter)
-    .sort('-createdAt') // newest first
-    .lean();
+  const notifications = await Notification.find({ recipient: req.user.id }).sort('-createdAt');
 
   res.status(200).json({
     status: 'success',
     results: notifications.length,
     data: {
-      notifications,
-    },
+      notifications
+    }
   });
 });
 
-// PATCH /api/notifications/:id/read
-exports.markNotificationAsRead = catchAsync(async (req, res, next) => {
-  const notification = await Notification.findOneAndUpdate(
-    { _id: req.params.id, user: req.user.id },
-    { read: true },
-    { new: true }
-  );
+exports.markAsRead = catchAsync(async (req, res, next) => {
+  const notification = await Notification.findByIdAndUpdate(req.params.id, { isRead: true }, {
+    new: true,
+    runValidators: true
+  });
 
   if (!notification) {
-    return next(new AppError('Notification not found', 404));
+    return next(new AppError('No notification found with that ID', 404));
   }
 
   res.status(200).json({
     status: 'success',
     data: {
-      notification,
-    },
+      notification
+    }
   });
 });
 
-// PATCH /api/notifications/mark-all-read
-exports.markAllAsRead = catchAsync(async (req, res, next) => {
-  await Notification.updateMany(
-    { user: req.user.id, read: false },
-    { read: true }
-  );
+// Internal helper to create notification (for future use by other controllers)
+exports.createNotification = async ({ recipient, title, message, type, link }) => {
+    try {
+        await Notification.create({ recipient, title, message, type, link });
+    } catch (err) {
+        console.error("Failed to create notification:", err);
+    }
+};
 
-  res.status(200).json({
-    status: 'success',
-    message: 'All notifications marked as read',
-  });
+// Seed Notification for demo
+exports.seedNotification = catchAsync(async (req, res, next) => {
+    await Notification.create({
+        recipient: req.user.id,
+        title: "Welcome to TrailSathi!",
+        message: "Thanks for joining. Start exploring trails now!",
+        type: "system",
+        isRead: false
+    });
+    res.status(200).json({ status: 'success', message: 'Seeded' });
 });
-
-// DELETE /api/notifications/:id
-exports.deleteNotification = catchAsync(async (req, res, next) => {
-  const notification = await Notification.findOneAndDelete({
-    _id: req.params.id,
-    user: req.user.id,
-  });
-
-  if (!notification) {
-    return next(new AppError('Notification not found', 404));
-  }
-
-  res.status(204).json({
-    status: 'success',
-    data: null,
-  });
-});
-
-

@@ -1,4 +1,4 @@
 import axios from "../api";
 
-export const getAllPaymentHistory = () => axios.get("payment/all-history")
+export const getAllPaymentHistory = (params = {}) => axios.get("payment/all-history", { params })
 

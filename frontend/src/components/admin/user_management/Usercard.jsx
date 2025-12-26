@@ -292,6 +292,7 @@ import {
   Mountain,
   User,
   Crown,
+  Activity,
 } from 'lucide-react';
 
 // ✅ ADDED: API URL for constructing image paths
@@ -320,65 +321,58 @@ const StatusIndicator = ({ status }) => {
 };
 
 
-export function UserCard({ user, onView, onEdit, onDelete }) {
+export function UserCard({ user, onView, onEdit, onDelete, onViewActivity }) {
   const roleConfig = {
-    Admin: { icon: Crown, className: "bg-purple-50 text-purple-700 border-purple-200", cardBorder: "border-l-4 border-l-purple-500", bgGradient: "bg-gradient-to-br from-purple-50/50 to-indigo-50/30" },
-    Guide: { icon: Mountain, className: "bg-blue-50 text-blue-700 border-blue-200", cardBorder: "border-l-4 border-l-blue-500", bgGradient: "bg-gradient-to-br from-blue-50/50 to-cyan-50/30" },
-    User: { icon: User, className: "bg-gray-50 text-gray-700 border-gray-200", cardBorder: "border-l-4 border-l-gray-400", bgGradient: "bg-gradient-to-br from-gray-50/50 to-slate-50/30" }
+    admin: { 
+      color: "bg-purple-100 text-purple-700 border-purple-200",
+      icon: Crown 
+    },
+    guide: { 
+      color: "bg-blue-100 text-blue-700 border-blue-200",
+      icon: Mountain 
+    },
+    hiker: { 
+      color: "bg-green-100 text-green-700 border-green-200",
+      icon: User 
+    }
   };
 
-  const config = roleConfig[user.role] || roleConfig.User;
+  const role = (user.role || 'hiker').toLowerCase();
+  const config = roleConfig[role] || roleConfig.hiker;
   const RoleIcon = config.icon;
 
   const formatDate = (dateString) => {
     if (!dateString) return "Unknown";
-    return new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    return new Date(dateString).toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
   };
 
   return (
-    <Card className={`
-      group relative overflow-hidden transition-all duration-300 ease-out
-      hover:shadow-xl hover:-translate-y-1 hover:scale-[1.02]
-      ${config.cardBorder}
-      border-0 shadow-sm bg-white
-    `}>
-      <div className={`absolute inset-0 ${config.bgGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-      
-      <CardHeader className="relative pb-3">
+    <Card className="group relative overflow-hidden transition-all duration-200 hover:shadow-lg border border-gray-200">
+      <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-4 flex-1 min-w-0">
-            <div className="relative">
-              <Avatar className="h-14 w-14 ring-2 ring-white shadow-md group-hover:ring-4 transition-all duration-300">
-                {/* ✅ CORRECTED: Use profileImage field and construct the full URL */}
-                <AvatarImage 
-                  src={user.profileImage ? `${API_URL}${user.profileImage}` : ''} 
-                  alt={user.name}
-                  className="object-cover"
-                />
-                <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-gray-100 to-gray-200 text-gray-700">
-                  {(user.name || '')
-                    .split(' ')
-                    .map((n) => n[0])
-                    .join('')
-                    .toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white shadow-sm ${
-                user.status === 'Active' ? 'bg-green-500' : 'bg-gray-400'
-              }`}></div>
-            </div>
+          <div className="flex items-center gap-3 flex-1">
+            <Avatar className="h-12 w-12 border-2 border-gray-100">
+              <AvatarImage 
+                src={user.profileImage ? `${API_URL}${user.profileImage}` : ''} 
+                alt={user.name}
+              />
+              <AvatarFallback className="bg-gradient-to-br from-gray-100 to-gray-200 text-gray-700 font-semibold">
+                {(user.name || '').split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)}
+              </AvatarFallback>
+            </Avatar>
             
             <div className="flex-1 min-w-0">
-              <CardTitle className="text-xl font-bold text-gray-900 mb-2 group-hover:text-gray-800 transition-colors">
+              <h3 className="font-semibold text-gray-900 truncate">
                 {user.name || 'Unknown User'}
-              </CardTitle>
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="outline" className={`${config.className} font-medium`}>
-                  <RoleIcon className="mr-1 h-3 w-3" />
-                  {user.role || 'User'}
-                </Badge>
-              </div>
+              </h3>
+              <Badge variant="outline" className={`${config.color} text-xs font-medium mt-1`}>
+                <RoleIcon className="mr-1 h-3 w-3" />
+                {user.role || 'Hiker'}
+              </Badge>
             </div>
           </div>
 
@@ -386,46 +380,49 @@ export function UserCard({ user, onView, onEdit, onDelete }) {
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="ghost" 
-                size="sm"
-                className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-gray-100"
+                size="icon"
+                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
               >
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={onView} className="cursor-pointer">
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem onClick={onView} className="cursor-pointer text-sm">
                 <Eye className="mr-2 h-4 w-4 text-blue-500" />
-                <span>View Details</span>
+                View Details
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onEdit} className="cursor-pointer">
+              <DropdownMenuItem onClick={onViewActivity} className="cursor-pointer text-sm">
+                <Activity className="mr-2 h-4 w-4 text-orange-500" />
+                Activity Log
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onEdit} className="cursor-pointer text-sm">
                 <Edit className="mr-2 h-4 w-4 text-green-500" />
-                <span>Edit User</span>
+                Edit User
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem 
                 onClick={onDelete} 
-                className="cursor-pointer text-red-600 focus:text-red-700 focus:bg-red-50"
+                className="cursor-pointer text-sm text-red-600 focus:text-red-700"
               >
                 <Trash2 className="mr-2 h-4 w-4" />
-                <span>Delete User</span>
+                Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </CardHeader>
 
-      <CardContent className="relative space-y-4 pt-0">
-        <div className="space-y-3">
-          <InfoItem 
-            icon={Mail} 
-            text={user.email || 'No email provided'} 
-          />
-          <InfoItem 
-            icon={Calendar} 
-            text={formatDate(user.createdAt || user.joinDate)}
-            subtext="Member since"
-            variant="default"
-          />
+      <CardContent className="pt-0 space-y-2.5">
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <Mail className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
+          <span className="truncate">{user.email || 'No email'}</span>
+        </div>
+        
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <Calendar className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
+          <span className="text-xs">
+            Joined {formatDate(user.createdAt || user.joinDate)}
+          </span>
         </div>
       </CardContent>
     </Card>

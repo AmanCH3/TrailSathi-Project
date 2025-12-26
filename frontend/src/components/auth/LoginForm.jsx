@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import useLoginUser from "../../hooks/useLoginUser";
 import { useNavigate } from "react-router-dom";
+import "./LoginForm.css";
 
 export default function LoginForm() {
   const navigate = useNavigate();

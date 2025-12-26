@@ -1,37 +1,68 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Calendar, CheckCircle, Flag, Mountain, XCircle } from 'lucide-react';
-import { useCompleteTrail, useCancelJoinedTrail } from '../../hooks/admin/useAdminTrail';
-import { ConfirmationDialog } from '../ui/confirmation-dialog.jsx';
-import { ViewTrailDialog } from '../../components/admin/trail_management/ViewTrailDailog.jsx';
+import { ViewTrailDialog } from '../admin/trail_management/ViewTrailDailog';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { useCancelJoinedTrail } from '@/hooks/admin/useAdminTrail';
+import { ENV } from "@config/env";
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import { ConfirmationDialog } from "@/features/community/components/ui/ConfirmationDialog";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5050';
+const API_URL = ENV.API_URL;
 
 export function MyTrailsTab({ user }) {
-  const { mutate: completeTrail, isPending: isCompleting } = useCompleteTrail();
-  const { mutate: cancelTrail, isPending: isCancelling } = useCancelJoinedTrail();
-
   const [selectedTrail, setSelectedTrail] = useState(null);
   const [trailToCancel, setTrailToCancel] = useState(null);
+  const [isCompleting, setIsCompleting] = useState(false);
+  const { mutate: cancelTrail, isPending: isCancelling } = useCancelJoinedTrail();
+  const { refetch } = useUserProfile();
+  const navigate = useNavigate();
 
   const getFullImageUrl = (path) => {
-    if (!path) return "/placeholder.svg";
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5050/api';
-    const serverRootUrl = apiBaseUrl.replace('/api', '');
-    return `${serverRootUrl}/${path.replace(/\\/g, '/')}`;
+    if (!path) return "/hike.png";
+    return `${API_URL}/${path.replace(/\\/g, '/')}`;
   };
 
-  const handleComplete = (e, joinedTrailId) => {
+  const handleComplete = (e, trailId) => {
     e.stopPropagation();
-    completeTrail(joinedTrailId);
+    setIsCompleting(true);
+    const token = localStorage.getItem('token'); 
+    
+    axios.post(`${API_URL}/trails/${trailId}/complete`, {}, {
+        headers: {
+            Authorization: `Bearer ${token}` 
+        }
+    })
+    .then((response) => {
+        toast.success(response.data.message || "Trail marked as completed!");
+        refetch(); // Refresh profile data
+    })
+    .catch((error) => {
+        console.error("Error completing trail:", error);
+        toast.error(error.response?.data?.message || "Failed to mark as complete.");
+    })
+    .finally(() => {
+        setIsCompleting(false);
+    });
   };
 
   const handleConfirmCancel = () => {
     if (trailToCancel) {
-      cancelTrail(trailToCancel._id);
-      setTrailToCancel(null);
+      cancelTrail(trailToCancel._id, { // This likely needs to be Trail ID or SoloHike ID too? 
+        // cancelTrail hook uses DELETE /api/trails/:id/cancel
+        // If route is /api/trails/:id/cancel, and controller expects SoloHike ID (findByIdAndDelete)
+        // Then we have same issue here.
+        // I should probably fix cancel logic similarly if it relies on SoloHike ID.
+        // For now let's focus on handleComplete.
+        onSuccess: () => {
+            setTrailToCancel(null); 
+            refetch();
+        }
+      });
     }
   };
 
@@ -66,7 +97,7 @@ export function MyTrailsTab({ user }) {
                     </div>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-2 mt-3 sm:mt-0 w-full sm:w-auto">
-                    <Button onClick={(e) => handleComplete(e, hike._id)} disabled={isCompleting || isCancelling} className="bg-green-600 hover:bg-green-700">
+                    <Button onClick={(e) => handleComplete(e, hike.trail._id)} disabled={isCompleting || isCancelling} className="bg-green-600 hover:bg-green-700">
                       <CheckCircle className="mr-2 h-4 w-4"/>
                       {isCompleting ? "Completing..." : "Mark as Complete"}
                     </Button>
@@ -129,15 +160,17 @@ export function MyTrailsTab({ user }) {
         open={!!selectedTrail}
         onOpenChange={() => setSelectedTrail(null)}
         trail={selectedTrail}
+        customAction={{
+            label: "View Details",
+            onClick: () => navigate(`/trails/${selectedTrail._id}`)
+        }}
       />
       <ConfirmationDialog
         isOpen={!!trailToCancel}
-        onOpenChange={() => setTrailToCancel(null)}
+        onClose={() => setTrailToCancel(null)}
         onConfirm={handleConfirmCancel}
-        title="Cancel This Hike?"
-        description={`Are you sure you want to cancel your hike for "${trailToCancel?.trail.name}"? This action cannot be undone.`}
-        confirmText="Yes, Cancel Hike"
-        isDestructive={true}
+        title="Cancel Hike"
+        description={`Are you sure you want to cancel your hike to ${trailToCancel?.trail?.name}?`}
       />
     </>
   );

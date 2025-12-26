@@ -49,11 +49,12 @@ const planDisplayNames = {
 export function PaymentsReports() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
+  const [page, setPage] = useState(1)
+  const [limit] = useState(10)
 
-  const { data: queryData, isLoading, isError, error } = useAdminGetPayment()
+  const { data: queryData, isLoading, isError, error, isFetching } = useAdminGetPayment({ page, limit, search: searchTerm, status: statusFilter })
 
-  // --- IMPROVEMENT: useMemo for performance ---
-  // Memoize the formatted payment data to avoid re-calculating on every render.
+  // Backend handles filtering now, so we just use the data directly
   const payments = useMemo(() => {
     if (!queryData?.data) return []
     return queryData.data.map(p => ({
@@ -61,7 +62,7 @@ export function PaymentsReports() {
       transactionId: p.transaction_uuid,
       user: p.userId?.name || "N/A",
       email: p.userId?.email || "N/A",
-      plan: planDisplayNames[p.plan] || p.plan, // Use the display name
+      plan: planDisplayNames[p.plan] || p.plan,
       amount: p.amount,
       status: formatStatus(p.status),
       method: "eSewa",
@@ -70,21 +71,7 @@ export function PaymentsReports() {
     }))
   }, [queryData])
 
-  // --- IMPROVEMENT: useMemo for filtering ---
-  // This ensures filtering logic only runs when dependencies change.
-  const filteredPayments = useMemo(() => {
-    return payments.filter((payment) => {
-      const searchLower = searchTerm.toLowerCase()
-      const matchesSearch =
-        payment.user.toLowerCase().includes(searchLower) ||
-        payment.email.toLowerCase().includes(searchLower) ||
-        payment.transactionId.toLowerCase().includes(searchLower) ||
-        payment.plan.toLowerCase().includes(searchLower)
-
-      const matchesStatus = statusFilter === "all" || payment.status.toLowerCase() === statusFilter
-      return matchesSearch && matchesStatus
-    })
-  }, [payments, searchTerm, statusFilter])
+  const pagination = queryData?.pagination || { total: 0, page: 1, limit: 10, totalPages: 1 }
 
 
   const summaryStats = useMemo(() => {
@@ -99,6 +86,17 @@ export function PaymentsReports() {
     
     return { totalRevenue, completedTransactions, pendingTransactions, successRate }
   }, [queryData])
+
+  // Reset to page 1 when filters change
+  const handleSearchChange = (value) => {
+    setSearchTerm(value)
+    setPage(1)
+  }
+
+  const handleStatusChange = (value) => {
+    setStatusFilter(value)
+    setPage(1)
+  }
 
   if (isLoading) {
     return <PaymentsReportsSkeleton />
@@ -169,11 +167,11 @@ export function PaymentsReports() {
               <Input
                 placeholder="Search by user, email, transaction ID, or plan..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="pl-10"
               />
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={statusFilter} onValueChange={handleStatusChange}>
               <SelectTrigger className="w-full md:w-[180px]">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
@@ -184,7 +182,7 @@ export function PaymentsReports() {
                 <SelectItem value="failed">Failed</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" onClick={() => { setSearchTerm(""); setStatusFilter("all"); }}>
+            <Button variant="outline" onClick={() => { handleSearchChange(""); handleStatusChange("all"); }}>
               Clear Filters
             </Button>
           </div>
@@ -194,7 +192,7 @@ export function PaymentsReports() {
       {/* Payments Table with Live Data */}
       <Card>
         <CardHeader>
-          <CardTitle>Transactions ({filteredPayments.length})</CardTitle>
+          <CardTitle>Transactions ({pagination.total})</CardTitle>
           <CardDescription>Latest payment transactions and their status.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -211,9 +209,8 @@ export function PaymentsReports() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {/* --- IMPROVEMENT: Handle empty state --- */}
-              {filteredPayments.length > 0 ? (
-                filteredPayments.map((payment) => (
+              {payments.length > 0 ? (
+                payments.map((payment) => (
                   <TableRow key={payment.id}>
                     <TableCell><div className="font-mono text-sm">{payment.transactionId}</div></TableCell>
                     <TableCell>
@@ -241,6 +238,33 @@ export function PaymentsReports() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Pagination Controls */}
+      {!isLoading && !isError && pagination.totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            Page {pagination.page} of {pagination.totalPages}
+          </div>
+          <div className="space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(p => Math.max(p - 1, 1))}
+              disabled={page === 1 || isFetching}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(p => p + 1)}
+              disabled={page === pagination.totalPages || isFetching}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
