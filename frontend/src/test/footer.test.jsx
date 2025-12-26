@@ -10,7 +10,7 @@ describe('Footer Component', () => {
 
   describe('Brand Section', () => {
     it('should render the brand logo and name', () => {
-      expect(screen.getByText('Hike Hub')).toBeInTheDocument();
+      expect(screen.getByText('Trail Sathi')).toBeInTheDocument();
     });
 
     it('should render the brand description', () => {
@@ -104,7 +104,7 @@ describe('Footer Component', () => {
 
   describe('Bottom Bar', () => {
     it('should render copyright notice', () => {
-      const copyrightText = screen.getByText(/© 2025 Hike Hub. All rights reserved/i);
+      const copyrightText = screen.getByText(/© 2025 Trail Sathi. All rights reserved/i);
       expect(copyrightText).toBeInTheDocument();
     });
 

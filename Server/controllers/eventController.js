@@ -27,7 +27,7 @@ exports.getGroupEvents = catchAsync(async (req, res, next) => {
         features.query = features.query.sort('startDateTime'); // Chronological usually better for events
     }
 
-    const events = await features.query;
+    const events = await features.query.populate('host', 'name profileImage');
 
     // Check RSVP status for each event if user is logged in
     const eventsWithRSVP = await Promise.all(events.map(async (event) => {

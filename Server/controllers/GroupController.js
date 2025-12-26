@@ -191,6 +191,8 @@ exports.updateGroup = catchAsync(async (req, res, next) => {
       if (req.files.avatar) dataToUpdate.avatar = req.files.avatar[0].path.replace(/\\/g, '/');
   }
 
+  console.log('Update Group Data:', dataToUpdate);
+
   group = await Group.findByIdAndUpdate(req.params.groupId, dataToUpdate, {
     new: true,
     runValidators: true

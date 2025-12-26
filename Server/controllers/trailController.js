@@ -315,14 +315,11 @@ exports.joinTrailWithDate = catchAsync(async (req, res, next) => {
 
   // 3. Create In-App Notification
   await Notification.create({
-    user: req.user.id,
-    type: 'INFO',
+    recipient: req.user.id,
+    type: 'system',
     title: 'Hike Scheduled!',
     message: `You have successfully scheduled a hike on ${trail.name} for ${new Date(hikeDate).toDateString()}.`,
-    metadata: {
-        trailId: trail._id,
-        soloHikeId: newSoloHike._id
-    }
+    link: `/trails/${trail._id}`
   });
 
   // 4. Update User's Joined Trails (Refactored to document pattern for achievement check)

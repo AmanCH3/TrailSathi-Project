@@ -23,6 +23,10 @@ const GroupSchema = new mongoose.Schema({
     type: String,
     default: 'default_group_cover.jpg' 
   },
+  avatar: {
+    type: String,
+    default: 'default_group_avatar.jpg' // Or null
+  },
   tags: [String],
   owner: {
     type: mongoose.Schema.ObjectId,

@@ -72,8 +72,8 @@ describe('Header Component', () => {
     it('should render the logo and brand name', () => {
       renderWithRouter(<Header />);
       
-      expect(screen.getByText('Hike Hub')).toBeInTheDocument();
-      expect(screen.getByAltText('Hike Hub')).toBeInTheDocument();
+      expect(screen.getByText('Trail Sathi')).toBeInTheDocument();
+      expect(screen.getByAltText('Trail Sathi')).toBeInTheDocument();
     });
 
     it('should render all navigation items', () => {

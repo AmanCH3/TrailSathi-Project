@@ -120,8 +120,7 @@ exports.getAllPendingRequests = catchAsync(async (req, res, next) => {
     const requests = await GroupMembership.find({ status: 'pending' })
         .populate({
             path: 'group',
-            select: 'title trail date',
-            populate: { path: 'trail', select: 'name difficult' }
+            select: 'name description memberCount'
         })
         .populate('user', 'name profileImage')
         .sort('-createdAt');

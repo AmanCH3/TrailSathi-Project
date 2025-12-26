@@ -13,7 +13,7 @@ export default function Footer() {
             <div className="lg:col-span-1">
               <div className="flex items-center gap-2 mb-6">
                 <Mountain className="w-8 h-8 text-yellow-400" />
-                <h3 className="text-2xl font-bold text-white">Hike Hub</h3>
+                <h3 className="text-2xl font-bold text-white">Trail Sathi</h3>
               </div>
               <p className="text-white/80 mb-6 leading-relaxed">
                 Connecting adventurous souls with breathtaking trails and unforgettable hiking experiences around the world.
@@ -89,7 +89,7 @@ export default function Footer() {
       <div className="relative bg-green-900 py-6 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-white/70 text-sm">
-            © 2025 Hike Hub. All rights reserved. Made with ❤️ for adventurers worldwide.
+            © 2025 Trail Sathi. All rights reserved. Made with ❤️ for adventurers worldwide.
           </p>
           <div className="flex gap-6 text-sm">
             <a href="#" className="text-white/70 hover:text-yellow-400 transition-colors">Privacy</a>

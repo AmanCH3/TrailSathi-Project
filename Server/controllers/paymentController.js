@@ -146,7 +146,7 @@ exports.verifyEsewaPayment = async (req, res) => {
 exports.getTransactionHistory = async (req, res) => {
     try {
         const userId = req.user._id;
-        const payments = await Payment.find({ userId, status: 'success' }).sort({ createdAt: -1 });
+        const payments = await Payment.find({ userId }).sort({ createdAt: -1 });
         return res.status(200).json({ success: true, data: payments });
     } catch (error) {
         console.error("Get transaction history error:", error);
@@ -216,3 +216,28 @@ exports.getAllTransactionHistory = async (req, res) => {
         })
     }
 }
+
+exports.deleteTransaction = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const transactionId = req.params.id;
+
+        const transaction = await Payment.findOne({ transaction_uuid: transactionId });
+
+        if (!transaction) {
+            return res.status(404).json({ success: false, message: "Transaction not found" });
+        }
+
+        // Ensure the transaction belongs to the user
+        if (transaction.userId.toString() !== userId.toString()) {
+             return res.status(403).json({ success: false, message: "Not authorized to delete this transaction" });
+        }
+
+        await Payment.findOneAndDelete({ transaction_uuid: transactionId });
+
+        return res.status(200).json({ success: true, message: "Transaction deleted successfully" });
+    } catch (error) {
+        console.error("Delete transaction error:", error);
+        return res.status(500).json({ success: false, message: "Server Error" });
+    }
+};
