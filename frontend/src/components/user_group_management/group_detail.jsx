@@ -221,6 +221,8 @@ import { toast } from "react-toastify";
 import { JoinGroupDialog } from "./join_group_dailog";
 import { CreateEventDialog } from "./create_event_dialog";
 import { EditGroupModal } from "@/features/community/components/groups/EditGroupModal";
+import { MessageCircle } from "lucide-react";
+import { useCreateConversation } from "../../hooks/useChatAppliction"; // Assuming we will create this hook or use service directly
 
 // ... existing imports
 
@@ -270,7 +272,7 @@ export function GroupDetails({ group, user }) {
   const displayDate = new Date(date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   
   // Filter confirmed participants
-  const confirmedParticipants = participants.filter(p => p.status === 'confirmed');
+  const confirmedParticipants = participants.filter(p => p.status === 'active');
   const currentSize = confirmedParticipants.length;
   const isGroupFull = currentSize >= maxSize;
   
@@ -288,6 +290,8 @@ export function GroupDetails({ group, user }) {
   const handleApprove = (requestId) => approveMutation.mutate({ groupId, requestId });
   const handleDeny = (requestId) => denyMutation.mutate({groupId, requestId });
 
+  const createConversationMutation = useCreateConversation();
+
   const handleDeleteGroup = async () => {
     if(confirm("Are you sure you want to delete this group? This cannot be undone.")) {
         deleteGroupMutation.mutate(groupId, {
@@ -299,6 +303,19 @@ export function GroupDetails({ group, user }) {
             }
         });
     }
+  };
+  
+  const handleMessageUser = (recipientId) => {
+      createConversationMutation.mutate({ recipientId }, {
+          onSuccess: (conversation) => {
+              // Redirect to messenger with new conversation
+              window.location.href = `/messenger/${conversation._id}`;
+          },
+          onError: (error) => {
+              toast.error("Failed to start conversation");
+              console.error(error);
+          }
+      });
   };
 
    const canViewChat = isCurrentUserLeader || isCurrentUserConfirmedParticipant;
@@ -525,6 +542,17 @@ export function GroupDetails({ group, user }) {
                   </div>
                 </div>
                 <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Confirmed</Badge>
+                {/* Chat Button for other users */}
+                {user?._id !== p.user?._id && (
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="ml-2 h-8 w-8 text-gray-500 hover:text-blue-600"
+                        onClick={() => handleMessageUser(p.user?._id)}
+                    >
+                        <MessageCircle className="h-5 w-5" />
+                    </Button>
+                )}
               </div>
             ))}
           </div></CardContent>

@@ -11,3 +11,13 @@ export const getMessagesForGroup = async (groupId) => {
     throw new Error("Failed to fetch messages from API.");
   }
 };
+
+export const createConversation = async (data) => {
+    try {
+        const response = await api.post('/conversations', data);
+        return response.data.data.conversation;
+    } catch (error) {
+        console.error("API error creating conversation:", error);
+        throw new Error("Failed to create conversation.");
+    }
+};

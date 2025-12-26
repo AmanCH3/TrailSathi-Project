@@ -1,9 +1,9 @@
-import { Calendar, MapPin, Users } from 'lucide-react';
+import { Calendar, MapPin, Users, MessageCircle } from 'lucide-react';
 import { formatDateTime } from '../../utils/formatters';
 import { Button } from '../ui/Button';
 import { getAssetUrl } from '@/utils/imagePath';
 
-export const EventCard = ({ event, onRSVP, onViewDetails }) => {
+export const EventCard = ({ event, onRSVP, onViewDetails, onChat }) => {
   const handleView = () => {
     onViewDetails(event.id || event._id);
   };
@@ -18,9 +18,20 @@ export const EventCard = ({ event, onRSVP, onViewDetails }) => {
         <h3 className="text-xl font-extrabold text-gray-900 leading-tight flex-1 mr-2 line-clamp-2">
           {event.title}
         </h3>
-        <span className="text-xs font-bold text-gray-600 bg-gray-100 px-3 py-1 rounded-full whitespace-nowrap">
-          {event.rsvpCount || 0} / {event.capacity || 20} Spots
-        </span>
+        <div className="flex items-center gap-2">
+            {onChat && (
+                <button 
+                    onClick={(e) => { e.stopPropagation(); onChat(); }}
+                    className="p-1.5 rounded-full bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors"
+                    title="Event Chat"
+                >
+                    <MessageCircle className="w-4 h-4" />
+                </button>
+            )}
+            <span className="text-xs font-bold text-gray-600 bg-gray-100 px-3 py-1 rounded-full whitespace-nowrap">
+            {event.rsvpCount || 0} / {event.capacity || 20} Spots
+            </span>
+        </div>
       </div>
 
       {/* Meta Info */}

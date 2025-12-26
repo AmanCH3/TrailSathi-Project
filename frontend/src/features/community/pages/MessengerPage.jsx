@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ConversationList } from '../components/messenger/ConversationList';
 import { MessageThread } from '../components/messenger/MessageThread';
 import { useConversations } from '../hooks/useMessages';
+import { useAuth } from '@/app/providers/AuthProvider';
 
 export const MessengerPage = () => {
   const { conversationId } = useParams();
@@ -14,7 +15,9 @@ export const MessengerPage = () => {
   };
 
   // Get current user ID from localStorage or auth context
-  const currentUserId = localStorage.getItem('userId'); // Adjust based on your auth implementation
+  // Get current user ID from auth context or localStorage
+  const { user } = useAuth();
+  const currentUserId = user?._id || user?.id || JSON.parse(localStorage.getItem('user') || '{}')._id;
 
   // Find selected conversation
   const selectedConversation = data?.conversations?.find(

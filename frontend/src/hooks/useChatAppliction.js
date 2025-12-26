@@ -62,3 +62,9 @@ export const useChatApplication = (groupId) => {
     isSending,
   };
 };
+
+export const useCreateConversation = () => {
+    return useMutation({
+        mutationFn: (data) => chatService.createConversation(data)
+    });
+};

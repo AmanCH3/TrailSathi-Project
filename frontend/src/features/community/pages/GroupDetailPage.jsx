@@ -75,12 +75,23 @@ export const GroupDetailPage = () => {
   const handleMessageMember = async (member) => {
     try {
       const conversation = await createConversationMutation.mutateAsync({
-        recipientId: member.id || member._id,
+        recipientId: member.user?._id || member.user?.id || member.id || member._id, // Prioritize user ID
         initialMessage: '',
       });
       navigate(`/messenger/${conversation.id || conversation._id}`);
     } catch (error) {
       console.error('Failed to create conversation:', error);
+    }
+  };
+
+  const handleEventChat = async (eventId) => {
+    try {
+      const conversation = await createConversationMutation.mutateAsync({
+        relatedEventId: eventId,
+      });
+      navigate(`/messenger/${conversation.id || conversation._id}`);
+    } catch (error) {
+      console.error('Failed to create/join event conversation:', error);
     }
   };
 
@@ -324,6 +335,7 @@ export const GroupDetailPage = () => {
                           event={event}
                           onRSVP={handleRSVP}
                           onViewDetails={handleViewEventDetails}
+                          onChat={() => handleEventChat(event.id || event._id)}
                         />
                       ))}
                   </div>

@@ -3,11 +3,31 @@ import { messagesService } from '../services/messagesService';
 import { toast } from 'react-toastify';
 
 export const useConversations = () => {
+  const currentUserId = localStorage.getItem('userId');
+
   return useQuery({
     queryKey: ['conversations'],
     queryFn: messagesService.getConversations,
-    refetchInterval: 10000, // Poll every 10 seconds
+    refetchInterval: 10000, 
     staleTime: 5000,
+    select: (data) => {
+        // Transform the list to add 'participant' property for easier UI consumption
+        const conversations = data.conversations.map(conv => {
+            // Find other participant
+            const otherParticipant = conv.participants.find(p => (p._id || p.id).toString() !== currentUserId) || {};
+            // If it's a group/event, maybe we want relatedGroup info as participant?
+            // For now, logic for Direct/Small Group:
+            return {
+                ...conv,
+                participant: {
+                    name: otherParticipant.name || 'Unknown User',
+                    avatar: otherParticipant.profileImage || otherParticipant.avatar,
+                    id: otherParticipant.id || otherParticipant._id
+                }
+            };
+        });
+        return { ...data, conversations };
+    }
   });
 };
 

@@ -25,6 +25,7 @@ export const ENDPOINTS = {
   // Conversations
   CONVERSATIONS_LIST: '/api/conversations',
   CONVERSATION_MESSAGES: (id) => `/api/conversations/${id}/messages`,
+  CONVERSATION_DETAIL: (id) => `/api/conversations/${id}`, // Add this
   SEND_MESSAGE: (id) => `/api/conversations/${id}/messages`,
   GROUP_MESSAGES: (groupId) => `/api/groups/${groupId}/messages`,
   SEND_GROUP_MESSAGE: (groupId) => `/api/groups/${groupId}/messages`,

@@ -99,13 +99,19 @@ exports.getGroup = catchAsync(async (req, res, next) => {
     return next(new AppError('No group found with that ID', 404));
   }
 
-  // Check membership
-  const membership = await GroupMembership.findOne({ group: req.params.groupId, user: req.user.id });
-  const isMember = !!membership;
+  // Fetch all members
+  const participants = await GroupMembership.find({ group: req.params.groupId })
+    .populate('user', 'name profileImage hikerType')
+    .lean();
+
+  // Check membership for current user (already fetched in participants, but quick check for flag)
+  const membership = participants.find(p => p.user._id.toString() === req.user.id);
+  const isMember = !!membership && membership.status === 'active'; // or 'confirmed'? status is usually 'active' for members
 
   // Clone group object to add property (mongoose object is immutable directly unless .toObject())
   const groupObj = group.toObject();
   groupObj.isMember = isMember;
+  groupObj.participants = participants; // Attach participants
 
   res.status(200).json({
     success: true,

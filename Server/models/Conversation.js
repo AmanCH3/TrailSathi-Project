@@ -24,6 +24,11 @@ const ConversationSchema = new mongoose.Schema({
   relatedEvent: {
     type: mongoose.Schema.ObjectId,
     ref: 'Event'
+  },
+  type: {
+    type: String,
+    enum: ['direct', 'group', 'event'],
+    default: 'direct'
   }
 }, {
   timestamps: true
