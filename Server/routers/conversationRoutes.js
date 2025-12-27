@@ -17,6 +17,9 @@ router.route('/:conversationId/messages')
     .get(messageController.getMessages)
     .post(messageController.sendMessage);
 
+router.delete('/:conversationId', conversationController.deleteConversation);
+router.delete('/:conversationId/messages/:messageId', messageController.deleteMessage);
+
 router.put('/:conversationId/read', messageController.markAsRead);
 
 module.exports = router;

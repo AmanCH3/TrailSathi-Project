@@ -1,23 +1,36 @@
-import { useEffect, useRef } from 'react';
-import { MessageCircle, Calendar } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { MessageCircle, Calendar, Trash2, MoreVertical } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { messagesService } from '../../services/messagesService';
-import { useMessages, useSendMessage, useMarkAsRead, useConversation } from '../../hooks/useMessages';
+import { 
+    useMessages, 
+    useSendMessage, 
+    useMarkAsRead, 
+    useConversation,
+    useDeleteMessage,
+    useDeleteConversation
+} from '../../hooks/useMessages';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
 import { Skeleton } from '../ui/Skeleton';
 import { EmptyState } from '../ui/EmptyState';
+import { useNavigate } from 'react-router-dom';
 
 import { getAssetUrl } from '@/utils/imagePath';
 
 export const MessageThread = ({ conversationId, participant, currentUserId }) => {
   const messagesEndRef = useRef(null);
+  const navigate = useNavigate();
+  const [showOptions, setShowOptions] = useState(false);
+  
   const { data, isLoading } = useMessages(conversationId);
   const { data: conversationDetails } = useConversation(conversationId);
+  
   const sendMutation = useSendMessage();
   const markReadMutation = useMarkAsRead();
+  const deleteMessageMutation = useDeleteMessage();
+  const deleteConversationMutation = useDeleteConversation();
 
-  // Derive participant if not provided (e.g., direct navigation)
   // Derive participant if not provided (e.g., direct navigation)
   const displayParticipant = participant || conversationDetails?.conversation?.participants?.find(
       p => (p._id || p.id).toString() !== String(currentUserId)
@@ -25,31 +38,35 @@ export const MessageThread = ({ conversationId, participant, currentUserId }) =>
 
   const queryClient = useQueryClient();
 
-  // Listen for real-time messages
+  // Listen for real-time messages & deletes
   useEffect(() => {
-    const unsub = messagesService.onNewMessage((data) => {
-      // If the incoming message belongs to this conversation
+    const unsubMsg = messagesService.onNewMessage((data) => {
       if (data.conversation === conversationId) {
         queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
         queryClient.invalidateQueries({ queryKey: ['conversations'] });
       }
     });
-    return unsub;
+
+    // We can add a generic notification listener too if needed for deletes, but usually specific events are better.
+    // For now assuming we just refetch on any update or use a specific event if backend sends one.
+    // The messageController emits 'message:deleted'. We need to listen for that.
+    if (messagesService.socket) {
+        messagesService.socket.on('message:deleted', (data) => {
+            if (data.conversationId === conversationId) {
+                queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
+                queryClient.invalidateQueries({ queryKey: ['conversations'] });
+            }
+        });
+    }
+
+    return () => {
+        unsubMsg();
+        if (messagesService.socket) {
+            messagesService.socket.off('message:deleted');
+        }
+    };
   }, [conversationId, queryClient]);
-  // Note: conversationDetails structure from hook usually is data.conversation? 
-  // checking hook usage: data = useConversation(). data is the response body?
-  // Controller returns { data: { conversation } }.
-  // So useConversation returns { data, ... }. 
-  // But wait, the hook returns `useQuery` result.
-  // `data` from useQuery will be the JSON response: { success: true, data: { conversation: ... } }
-  // So `conversationDetails` in my code (line 14) is storing `data` from query.
-  // So it corresponds to the whole response object?
-  // Let's check `useConversation` hook again.
-  // `queryFn: () => messagesService.getConversation(id)`
-  // `messagesService` usually returns `response.data`.
-  // If `messagesService` returns `response.data`, then `data` is `{ success, data: { conversation } }`.
-  // So `conversationDetails.data.conversation`.
-  // Let me verify `messagesService.getConversation`.
+
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -72,6 +89,22 @@ export const MessageThread = ({ conversationId, participant, currentUserId }) =>
     });
   };
 
+  const handleDeleteMessage = (messageId) => {
+      if (confirm('Are you sure you want to delete this message?')) {
+          deleteMessageMutation.mutate({ conversationId, messageId });
+      }
+  };
+
+  const handleDeleteConversation = () => {
+      if (confirm('Are you sure you want to delete this entire conversation? It will be removed for everyone.')) {
+          deleteConversationMutation.mutate(conversationId, {
+              onSuccess: () => {
+                  navigate('/messenger');
+              }
+          });
+      }
+  };
+
   if (!conversationId) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center bg-gray-50/50">
@@ -87,7 +120,7 @@ export const MessageThread = ({ conversationId, participant, currentUserId }) =>
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-white">
+    <div className="flex-1 flex flex-col h-full bg-white relative">
       {/* Thread Header */}
       <div className="px-6 py-4 border-b border-gray-100 bg-white/80 backdrop-blur-sm sticky top-0 z-10 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
@@ -112,7 +145,34 @@ export const MessageThread = ({ conversationId, participant, currentUserId }) =>
              </span>
           </div>
         </div>
+        
+        {/* Actions */}
+        <div className="relative">
+            <button 
+                onClick={() => setShowOptions(!showOptions)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500"
+            >
+                <MoreVertical className="w-5 h-5" />
+            </button>
+            
+            {showOptions && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50 animate-in fade-in zoom-in-95 duration-200">
+                    <button
+                        onClick={handleDeleteConversation}
+                        className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                        Delete Conversation
+                    </button>
+                </div>
+            )}
         </div>
+        
+        {/* Backdrop for menu */}
+        {showOptions && (
+            <div className="fixed inset-0 z-40" onClick={() => setShowOptions(false)} />
+        )}
+      </div>
 
        {/* Event Banner */}
        {conversationDetails?.relatedEvent && (
@@ -154,9 +214,10 @@ export const MessageThread = ({ conversationId, participant, currentUserId }) =>
               <MessageBubble
                 key={message.id || message._id}
                 message={message}
-                isOwn={(message.senderId || message.sender?.id || message.sender?._id) === currentUserId}
+                isOwn={(message.senderId || message.sender?.id || message.sender?._id).toString() === String(currentUserId)}
                 senderAvatar={displayParticipant?.profileImage || displayParticipant?.avatar}
                 senderName={displayParticipant?.name}
+                onDelete={handleDeleteMessage}
               />
             ))}
             <div ref={messagesEndRef} />

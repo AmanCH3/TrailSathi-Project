@@ -12,9 +12,9 @@ const queryClient = new QueryClient();
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <AuthContextProvider>
-      <SavedTrailsProvider>
-        <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <AuthContextProvider>
+        <SavedTrailsProvider>
           <GlobalLoader>
             <AppRouter />
             <ToastContainer
@@ -30,8 +30,8 @@ createRoot(document.getElementById("root")).render(
               theme="light"
             ></ToastContainer>
           </GlobalLoader>
-        </QueryClientProvider>
-      </SavedTrailsProvider>
-    </AuthContextProvider>
+        </SavedTrailsProvider>
+      </AuthContextProvider>
+    </QueryClientProvider>
   </StrictMode>
 );
