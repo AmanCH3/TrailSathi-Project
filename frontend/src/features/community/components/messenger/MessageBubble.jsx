@@ -1,8 +1,9 @@
 import { formatTimestamp } from '../../utils/formatters';
 import { cn } from '@/lib/utils';
 import { getAssetUrl } from '@/utils/imagePath';
+import { Trash2 } from 'lucide-react';
 
-export const MessageBubble = ({ message, isOwn, senderAvatar, senderName }) => {
+export const MessageBubble = ({ message, isOwn, senderAvatar, senderName, onDelete }) => {
   return (
     <div className={cn('flex gap-3 mb-4 animate-in fade-in slide-in-from-bottom-2 duration-300', isOwn && 'flex-row-reverse')}>
       {/* Avatar (only for other's messages) */}
@@ -23,15 +24,26 @@ export const MessageBubble = ({ message, isOwn, senderAvatar, senderName }) => {
         {!isOwn && (
           <span className="text-[11px] text-gray-500 mb-1 ml-1 font-medium">{senderName}</span>
         )}
-        <div
-          className={cn(
-            'px-4 py-2 shadow-sm break-words text-sm leading-relaxed',
-            isOwn
-              ? 'bg-emerald-600 text-white rounded-2xl rounded-tr-sm'
-              : 'bg-white border border-gray-100 text-gray-800 rounded-2xl rounded-tl-sm'
-          )}
-        >
-          {message.text}
+        <div className="group relative">
+            <div
+            className={cn(
+                'px-4 py-2 shadow-sm break-words text-sm leading-relaxed',
+                isOwn
+                ? 'bg-emerald-600 text-white rounded-2xl rounded-tr-sm'
+                : 'bg-white border border-gray-100 text-gray-800 rounded-2xl rounded-tl-sm'
+            )}
+            >
+            {message.text}
+            </div>
+            {isOwn && (
+                <button 
+                    onClick={() => onDelete(message.id || message._id)}
+                    className="absolute top-1/2 -translate-y-1/2 -left-8 p-1.5 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all bg-white rounded-full shadow-sm"
+                    title="Delete message"
+                >
+                    <Trash2 className="w-3.5 h-3.5" />
+                </button>
+            )}
         </div>
         <span className={cn(
             "text-[10px] text-gray-400 mt-1 select-none",

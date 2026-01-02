@@ -20,7 +20,7 @@ import GroupsPage from "../pages/GroupPage";
 import ProtectedRoute from "../components/protectedRoutes";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { GroupDetails } from "../components/user_group_management/group_detail";
-import HikeHub404 from "../pages/HikeHub404";
+import TrailSathi404 from "../pages/TrailSathi404";
 import PaymentsPage from "../pages/PaymentPage";
 import EsewaSuccessPage from "../pages/EsewaSuccessPage";
 import ChecklistPage from "../pages/ChecklistPage";
@@ -32,17 +32,27 @@ import SavedTrailsPage from "../pages/SavedTrailsPage";
 import { GroupsDiscoveryPage, GroupDetailPage, EventDetailPage, MessengerPage } from "../features/community";
 
 // It's good practice to create a simple component for the failure page too
-const EsewaFailurePage = () => (
-    <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-            <h1 className="text-2xl font-bold text-red-600">Payment Failed</h1>
-            <p className="text-gray-700">Your payment could not be processed. Please try again.</p>
-            <a href="/payments" className="mt-4 inline-block bg-blue-500 text-white px-4 py-2 rounded">
-                Go back to Payments
-            </a>
+const EsewaFailurePage = () => {
+    const params = new URLSearchParams(window.location.search);
+    const message = params.get('message') || 'Your payment could not be processed. Please try again.';
+
+    return (
+        <div className="flex items-center justify-center h-screen bg-gray-50">
+            <div className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full text-center">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </div>
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">Payment Failed</h1>
+                <p className="text-gray-600 mb-6">{message}</p>
+                <a href="/community/groups" className="inline-block bg-gray-900 hover:bg-gray-800 text-white font-medium px-6 py-3 rounded-lg transition-colors">
+                    Back to Groups
+                </a>
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 
 export default function AppRouter() {
@@ -118,7 +128,7 @@ export default function AppRouter() {
         <Route path="/payment/failure" element={<EsewaFailurePage />} />
         
         {/* 404 Catch-all Route */}
-        <Route path="*" element={<HikeHub404 />} />
+        <Route path="*" element={<TrailSathi404 />} />
       </Routes>
     </BrowserRouter>
   );

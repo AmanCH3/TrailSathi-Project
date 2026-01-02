@@ -68,6 +68,17 @@ export const messagesService = {
     };
   },
 
+  onNotification: (callback) => {
+    if (messagesService.socket) {
+      messagesService.socket.on('notification', callback);
+    }
+    return () => {
+      if (messagesService.socket) {
+        messagesService.socket.off('notification', callback);
+      }
+    };
+  },
+
   // ... REST methods below ...
   getConversations: async () => {
   // ... existing code ...

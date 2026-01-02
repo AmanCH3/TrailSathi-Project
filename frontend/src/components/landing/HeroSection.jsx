@@ -25,7 +25,7 @@ const HeroSection = () => {
           Your Next Adventure Starts <br /> <span className="text-green-400">Here</span>
         </h1>
         <p className="mt-4 text-lg md:text-xl text-gray-300 max-w-2xl mx-auto">
-          Discover trails, join hiking groups, and prepare for your next outdoor experience with HikeHub.
+          Discover trails, join hiking groups, and prepare for your next outdoor experience with TrailSathi.
         </p>
 
         <div className="mt-8 flex justify-center gap-4 flex-wrap">

@@ -10,7 +10,11 @@ const paymentSchema = new mongoose.Schema({
   plan: {
     type: String,
     required: true,
-    enum: ['Pro', 'Premium'],
+  },
+  eventId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Event',
+    required: false,
   },
   amount: {
     type: Number,

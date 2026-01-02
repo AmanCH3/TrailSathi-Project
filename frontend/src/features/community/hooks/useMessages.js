@@ -3,7 +3,9 @@ import { messagesService } from '../services/messagesService';
 import { toast } from 'react-toastify';
 
 export const useConversations = () => {
-  const currentUserId = localStorage.getItem('userId');
+  // Robustly get user ID
+  const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const currentUserId = localStorage.getItem('userId') || storedUser._id || storedUser.id;
 
   return useQuery({
     queryKey: ['conversations'],
@@ -11,8 +13,11 @@ export const useConversations = () => {
     refetchInterval: 10000, 
     staleTime: 5000,
     select: (data) => {
+        // Handle potentially different response structures (unwrapped vs full response)
+        const rawConversations = data?.data?.conversations || data?.conversations || [];
+        
         // Transform the list to add 'participant' property for easier UI consumption
-        const conversations = data.conversations.map(conv => {
+        const conversations = rawConversations.map(conv => {
             // Find other participant
             const otherParticipant = conv.participants.find(p => (p._id || p.id).toString() !== currentUserId) || {};
             // If it's a group/event, maybe we want relatedGroup info as participant?
@@ -124,4 +129,35 @@ export const useSendGroupMessage = () => {
       toast.error('Failed to send message.');
     },
   });
+};
+
+export const useDeleteMessage = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ conversationId, messageId }) =>
+      messagesService.deleteMessage(conversationId, messageId),
+    onSuccess: (data, variables) => {
+        queryClient.invalidateQueries({ queryKey: ['messages', variables.conversationId] });
+        queryClient.invalidateQueries({ queryKey: ['conversations'] });
+    },
+    onError: () => {
+        toast.error('Failed to delete message');
+    }
+  });
+};
+
+export const useDeleteConversation = () => {
+    const queryClient = useQueryClient();
+    
+    return useMutation({
+        mutationFn: (conversationId) => messagesService.deleteConversation(conversationId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['conversations'] });
+            toast.success('Conversation deleted');
+        },
+        onError: () => {
+            toast.error('Failed to delete conversation');
+        }
+    });
 };

@@ -15,7 +15,7 @@ const formatHistoryForApi = (messages) => {
 export const useChatbot = () => {
     
     const [messages, setMessages] = useState([
-        { text: 'Hey Hiker! I’m TrailMate. How can I help you navigate your next adventure today?', sender: 'bot' },
+        { text: 'Hey Hiker! I’m TrailSathi. How can I help you navigate your next adventure today?', sender: 'bot' },
     ]);
 
     const mutation = useMutation({

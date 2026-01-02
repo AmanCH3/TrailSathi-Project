@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarChart, Bar } from "recharts"
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarChart, Bar, LineChart, Line } from "recharts"
 // === Icon Imports Added ===
 import { Users, Mountain, DollarSign, TrendingUp, Calendar, Clock, Loader2, X, Check, UserPlus, CheckCircle, XCircle, Users2 } from "lucide-react"
 import { useGetAllPendingRequests, useApproveJoinRequest, useDenyJoinRequest } from "../../hooks/useGroup"
@@ -237,15 +237,32 @@ export function DashboardHome() {
             {isLoadingAnalytics ? (
                 <div className="h-[300px] flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>
             ) : (
-                <ChartContainer config={{ users: { label: "Users", color: "hsl(var(--chart-1))" } }} className="h-[300px]">
+                <ChartContainer config={{ users: { label: "Users", color: "hsl(var(--primary))" } }} className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={userGrowthData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
+                    <LineChart data={userGrowthData} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis 
+                        dataKey="month" 
+                        axisLine={false}
+                        tickLine={false}
+                        tickMargin={10}
+                      />
+                      <YAxis 
+                        axisLine={false}
+                        tickLine={false}
+                        tickMargin={10}
+                        allowDecimals={false}
+                      />
                       <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
-                      <Area type="monotone" dataKey="users" stroke="hsl(var(--chart-1))" fill="hsl(var(--chart-1))" fillOpacity={0.6} />
-                    </AreaChart>
+                      <Line 
+                        type="monotone" 
+                        dataKey="users" 
+                        strokeWidth={2}
+                        activeDot={{ r: 6 }}
+                        stroke="hsl(var(--primary))" 
+                        dot={{ r: 4, fill: "hsl(var(--background))", strokeWidth: 2 }}
+                      />
+                    </LineChart>
                   </ResponsiveContainer>
                 </ChartContainer>
             )}

@@ -55,9 +55,7 @@ export const ConversationItem = ({ conversation, isActive, onClick }) => {
              </span>
           )}
         </div>
-        <p className={cn('text-xs truncate', hasUnread ? 'text-gray-900 font-medium' : 'text-gray-500')}>
-          {conversation.lastMessage || 'No messages yet'}
-        </p>
+
       </div>
     </button>
   );

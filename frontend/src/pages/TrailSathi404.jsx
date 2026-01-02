@@ -2,7 +2,7 @@ import React from 'react';
 import { Home, MapPin, Users, MessageCircle, Mountain, TreePine, Compass } from 'lucide-react';
 import { Link, Links } from 'react-router-dom';
 
-const HikeHub404 = () => {
+const TrailSathi404 = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-emerald-50 flex items-center justify-center p-4">
       {/* Background decoration */}
@@ -80,7 +80,7 @@ const HikeHub404 = () => {
 
         {/* Footer */}
         <div className="mt-8 text-gray-500 text-sm">
-          <p>Need help finding your way? Contact our trail guides at support@hikehub.com</p>
+          <p>Need help finding your way? Contact our trail guides at support@TrailSathi.com</p>
         </div>
       </div>
 
@@ -94,4 +94,4 @@ const HikeHub404 = () => {
   );
 };
 
-export default HikeHub404;
+export default TrailSathi404;

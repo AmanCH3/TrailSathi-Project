@@ -105,3 +105,25 @@ exports.getConversation = catchAsync(async (req, res, next) => {
         data: { conversation }
     });
 });
+
+exports.deleteConversation = catchAsync(async (req, res, next) => {
+    const { conversationId } = req.params;
+
+    // Check participation
+    const conversation = await Conversation.findById(conversationId);
+    if (!conversation) return next(new AppError('Conversation not found', 404));
+
+    const isParticipant = conversation.participants.some(p => p.toString() === req.user.id);
+    if (!isParticipant) return next(new AppError('Access denied', 403));
+
+    // Hard delete the conversation and all associated messages
+    await Conversation.findByIdAndDelete(conversationId);
+    // You might also want to delete messages associated with it
+    const Message = require('../models/Message');
+    await Message.deleteMany({ conversation: conversationId });
+
+    res.status(204).json({
+        success: true,
+        data: null
+    });
+});

@@ -59,14 +59,31 @@ exports.sendMessage = catchAsync(async (req, res, next) => {
     await conversation.save();
 
     // Emit socket event
+    // Emit socket event
     if (req.io) {
-        req.io.to(conversationId).emit('message:new', {
+        const messagePayload = {
             ...message.toObject(),
             sender: {
                 _id: req.user.id,
                 name: req.user.name,
                 profileImage: req.user.profileImage
             }
+        };
+
+        // Emit to conversation room (for active chat windows)
+        req.io.to(conversationId).emit('message:new', messagePayload);
+
+        // Emit notifications to other participants' personal rooms
+        const otherParticipants = conversation.participants.filter(p => p.toString() !== req.user.id);
+        otherParticipants.forEach(participantId => {
+            req.io.to(`user_${participantId}`).emit('notification', {
+                type: 'message',
+                conversation: conversationId,
+                message: messagePayload,
+                sender: {
+                    name: req.user.name
+                }
+            });
         });
     }
 
@@ -140,4 +157,28 @@ exports.markAsRead = catchAsync(async (req, res, next) => {
     });
 
     res.status(200).json({ success: true, message: 'Marked as read' });
+});
+
+exports.deleteMessage = catchAsync(async (req, res, next) => {
+    const { messageId } = req.params;
+
+    const message = await Message.findById(messageId);
+    if (!message) return next(new AppError('Message not found', 404));
+
+    // Only sender can delete
+    if (message.sender.toString() !== req.user.id) {
+        return next(new AppError('You can only delete your own messages', 403));
+    }
+
+    await Message.findByIdAndDelete(messageId);
+
+    // Emit socket event for real-time removal
+    if (req.io) {
+        req.io.to(message.conversation.toString()).emit('message:deleted', {
+            messageId,
+            conversationId: message.conversation
+        });
+    }
+
+    res.status(204).json({ success: true, data: null });
 });

@@ -7,6 +7,6 @@ export const sendChatQueryService = async (data) => {
     return response.data; 
   } catch (err) {
 
-    throw err.response?.data || { message: "Failed to get a response from TrailMate." };
+    throw err.response?.data || { message: "Failed to get a response from TrailSathi." };
   }
 };

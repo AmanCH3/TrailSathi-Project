@@ -30,7 +30,7 @@ export default function AdminLayout() {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink href="/admin/dashboard">HikeHub Admin</BreadcrumbLink>
+                <BreadcrumbLink href="/admin/dashboard">TrailSathi Admin</BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator className="hidden md:block" />
               <BreadcrumbItem>

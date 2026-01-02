@@ -80,23 +80,23 @@ export function ForgotPasswordForm() {
   return (
     <div className="w-full font-poppins text-left">
       {step === 1 && (
-        <form onSubmit={formikStep1.handleSubmit} className="space-y-4">
+        <form onSubmit={formikStep1.handleSubmit} className="space-y-6">
           <div className="space-y-1">
-            <label className="mb-1 block text-sm font-semibold text-gray-700">Email</label>
+            <label className="mb-1 block text-[14px] font-semibold text-black">Email</label>
             <input
               type="email"
               placeholder="name@example.com"
-              className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border-b border-gray-300 bg-transparent pb-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-black focus:outline-none"
               {...formikStep1.getFieldProps("email")}
             />
             {formikStep1.touched.email && formikStep1.errors.email && (
-              <p className="text-xs text-red-500">{formikStep1.errors.email}</p>
+              <p className="mt-1 text-xs text-red-300">{formikStep1.errors.email}</p>
             )}
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-md bg-[#e45a4f] py-2 text-sm font-semibold text-white shadow hover:bg-[#d94a3e] disabled:opacity-70 flex justify-center items-center"
+            className="mt-2 w-full rounded-md bg-[#e45a4f] py-2.5 text-sm font-semibold tracking-wide text-white shadow-md transition hover:bg-[#d94a3e] disabled:cursor-not-allowed disabled:opacity-70 flex justify-center items-center"
           >
             {loading ? <AiOutlineLoading3Quarters className="animate-spin" /> : "Send Reset Link"}
           </button>
@@ -104,77 +104,77 @@ export function ForgotPasswordForm() {
       )}
 
       {step === 2 && (
-        <form onSubmit={formikStep2.handleSubmit} className="space-y-4">
+        <form onSubmit={formikStep2.handleSubmit} className="space-y-6">
           {/* OTP */}
           <div className="space-y-1">
-            <label className="mb-1 block text-sm font-semibold text-gray-700">OTP</label>
+            <label className="mb-1 block text-[14px] font-semibold text-black">OTP</label>
             <input
               type="text"
               placeholder="Enter 6-digit OTP"
-              className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border-b border-gray-300 bg-transparent pb-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-black focus:outline-none"
               {...formikStep2.getFieldProps("otp")}
             />
             {formikStep2.touched.otp && formikStep2.errors.otp && (
-              <p className="text-xs text-red-500">{formikStep2.errors.otp}</p>
+              <p className="mt-1 text-xs text-red-300">{formikStep2.errors.otp}</p>
             )}
           </div>
 
           {/* New Password */}
           <div className="space-y-1">
-            <label className="mb-1 block text-sm font-semibold text-gray-700">New Password</label>
+            <label className="mb-1 block text-[14px] font-semibold text-black">New Password</label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="********"
-                className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border-b border-gray-300 bg-transparent pb-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-black focus:outline-none"
                 {...formikStep2.getFieldProps("password")}
               />
               <button
                 type="button"
-                className="absolute right-3 top-2.5 text-gray-500"
+                className="absolute right-0 top-1/2 -translate-y-1/2 transform text-gray-400 hover:text-black"
                 onClick={() => setShowPassword(!showPassword)}
               >
-                {showPassword ? <FiEyeOff /> : <FiEye />}
+                {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
               </button>
             </div>
             {formikStep2.touched.password && formikStep2.errors.password && (
-              <p className="text-xs text-red-500">{formikStep2.errors.password}</p>
+              <p className="mt-1 text-xs text-red-300">{formikStep2.errors.password}</p>
             )}
           </div>
 
           {/* Confirm Password */}
           <div className="space-y-1">
-            <label className="mb-1 block text-sm font-semibold text-gray-700">Confirm Password</label>
+            <label className="mb-1 block text-[14px] font-semibold text-black">Confirm Password</label>
             <div className="relative">
               <input
                 type={showConfirmPassword ? "text" : "password"}
                 placeholder="********"
-                className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border-b border-gray-300 bg-transparent pb-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-black focus:outline-none"
                 {...formikStep2.getFieldProps("confirmPassword")}
               />
               <button
                 type="button"
-                className="absolute right-3 top-2.5 text-gray-500"
+                className="absolute right-0 top-1/2 -translate-y-1/2 transform text-gray-400 hover:text-black"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               >
-                {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+                {showConfirmPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
               </button>
             </div>
             {formikStep2.touched.confirmPassword && formikStep2.errors.confirmPassword && (
-              <p className="text-xs text-red-500">{formikStep2.errors.confirmPassword}</p>
+              <p className="mt-1 text-xs text-red-300">{formikStep2.errors.confirmPassword}</p>
             )}
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-md bg-[#e45a4f] py-2 text-sm font-semibold text-white shadow hover:bg-[#d94a3e] disabled:opacity-70 flex justify-center items-center"
+            className="mt-2 w-full rounded-md bg-[#e45a4f] py-2.5 text-sm font-semibold tracking-wide text-white shadow-md transition hover:bg-[#d94a3e] disabled:cursor-not-allowed disabled:opacity-70 flex justify-center items-center"
           >
             {loading ? <AiOutlineLoading3Quarters className="animate-spin" /> : "Reset Password"}
           </button>
           
-          <div className="text-center text-xs mt-2">
-             <button type="button" onClick={() => setStep(1)} className="text-blue-600 hover:underline">Resend OTP / Change Email</button>
+          <div className="text-center text-xs mt-4">
+             <button type="button" onClick={() => setStep(1)} className="text-gray-500 hover:text-red-500 hover:underline font-medium">Resend OTP / Change Email</button>
           </div>
         </form>
       )}

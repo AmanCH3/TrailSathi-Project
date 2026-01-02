@@ -93,13 +93,21 @@ export const EventCard = ({ event, onRSVP, onViewDetails, onChat }) => {
       </div>
 
       {/* Hover Action Button */}
-      <div className="absolute bottom-6 left-6 right-6 translate-y-4 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 ease-in-out">
+      {/* Action Buttons */}
+      <div className="absolute bottom-6 left-6 right-6 flex gap-3 translate-y-0 opacity-100 transition-all duration-300 ease-in-out">
         <Button
-            variant="primary"
-            className="w-full shadow-lg font-medium bg-emerald-600 hover:bg-emerald-700 text-white"
+            variant="outline"
+            className="flex-1 bg-white hover:bg-gray-50 text-emerald-600 border-emerald-600"
             onClick={handleView}
         >
-            View Details
+            Details
+        </Button>
+        <Button
+            variant="primary"
+            className="flex-1 shadow-lg font-medium bg-emerald-600 hover:bg-emerald-700 text-white"
+            onClick={handleView}
+        >
+            Join
         </Button>
       </div>
     </div>

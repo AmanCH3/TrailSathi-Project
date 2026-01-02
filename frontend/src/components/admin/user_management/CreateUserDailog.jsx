@@ -154,7 +154,7 @@ export function CreateUserDialog({ open, onOpenChange, onCreate, isLoading = fal
             Add New User
           </DialogTitle>
           <DialogDescription className="text-gray-600">
-            Create a new user account for the HikeHub platform. Fields marked with * are required.
+            Create a new user account for the TrailSathi platform. Fields marked with * are required.
           </DialogDescription>
         </DialogHeader>
 

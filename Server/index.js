@@ -53,6 +53,10 @@ io.use((socket, next) => {
 // Socket Connection Handler
 io.on('connection', (socket) => {
     console.log(`User connected: ${socket.user.id}`);
+    
+    // Auto-join user to their own room for notifications
+    socket.join(`user_${socket.user.id}`);
+    console.log(`User ${socket.user.id} joined personal room user_${socket.user.id}`);
 
     socket.on('join_conversation', (conversationId) => {
         socket.join(conversationId);
