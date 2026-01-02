@@ -101,7 +101,7 @@ export function AppSidebar() {
               <Mountain className="h-5 w-5 text-white" />
             </div>
             <div className="flex flex-col">
-              <h1 className="text-lg font-semibold tracking-tight">HikeHub</h1>
+              <h1 className="text-lg font-semibold tracking-tight">TrailSathi</h1>
               <p className="text-xs text-muted-foreground font-medium">
                 Admin Dashboard
               </p>

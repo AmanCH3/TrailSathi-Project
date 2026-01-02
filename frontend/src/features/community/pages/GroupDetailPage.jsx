@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/app/providers/AuthProvider';
+import { useQueryClient } from '@tanstack/react-query';
 import { useGroupDetail, useJoinGroup, useLeaveGroup } from '../hooks/useGroups';
 import { usePosts, useCreatePost, useLikePost } from '../hooks/usePosts';
 import { useEvents, useRSVPEvent } from '../hooks/useEvents';
@@ -94,6 +95,28 @@ export const GroupDetailPage = () => {
       console.error('Failed to create/join event conversation:', error);
     }
   };
+
+  // Check for payment success redirect
+  const { search } = useLocation();
+  const queryParams = new URLSearchParams(search);
+  const paymentStatus = queryParams.get('payment');
+  const paymentEventId = queryParams.get('eventId');
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (paymentStatus === 'success' && paymentEventId) {
+        toast.success("Payment Successful! You have joined the event.");
+        // Force refresh of group events and details
+        queryClient.invalidateQueries(['events', groupId]);
+        queryClient.invalidateQueries(['event', paymentEventId]);
+        
+        // Open the event modal so they can see their status
+        setSelectedEventId(paymentEventId);
+        
+        // Clean URL
+        navigate(`/community/groups/${groupId}`, { replace: true });
+    }
+  }, [paymentStatus, paymentEventId, groupId, navigate, queryClient]);
 
   if (groupError) {
     return (

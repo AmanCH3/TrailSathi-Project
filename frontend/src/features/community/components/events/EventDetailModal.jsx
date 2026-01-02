@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { X, Calendar, MapPin, Users, CheckCircle, MessageCircle, Clock, AlertCircle } from 'lucide-react';
 import { useEventDetail, useRSVPEvent, useConfirmAttendance } from '../../hooks/useEvents';
 import { useCreateConversation } from '../../hooks/useMessages';
@@ -9,6 +9,9 @@ import { Badge } from '../ui/Badge';
 import { Skeleton } from '../ui/Skeleton';
 import { ErrorBanner } from '../ui/ErrorBanner';
 import { useNavigate } from 'react-router-dom';
+import axiosInstance from '../../services/api/axios.config';
+import { postToEsewa } from '@/utils/esewa';
+import { toast } from 'react-toastify';
 
 export const EventDetailModal = ({ isOpen, onClose, eventId }) => {
   const modalRef = useRef(null);
@@ -18,10 +21,16 @@ export const EventDetailModal = ({ isOpen, onClose, eventId }) => {
   const { data: event, isLoading, error } = useEventDetail(eventId);
   const rsvpMutation = useRSVPEvent();
   const createConversationMutation = useCreateConversation();
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [isPaymentLoading, setIsPaymentLoading] = useState(false);
   
   // Close on click outside
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // If payment dialog is open, do not close the main modal on outside clicks
+      // (The payment dialog should handle its own closing or rely on user action)
+      if (isPaymentDialogOpen) return;
+
       if (modalRef.current && !modalRef.current.contains(event.target)) {
         onClose();
       }
@@ -36,17 +45,56 @@ export const EventDetailModal = ({ isOpen, onClose, eventId }) => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, isPaymentDialogOpen]); // Added isPaymentDialogOpen dependency
 
   if (!isOpen) return null;
 
-  const handleRSVP = () => {
+  const executeRSVP = () => {
     if (!event) return;
     rsvpMutation.mutate({
       eventId: event.id || event._id,
       hasRSVPd: event.hasRSVPd,
       groupId: event.group?.id || event.group?._id || event.group
     });
+  };
+
+  const handlePayment = async () => {
+    try {
+      setIsPaymentLoading(true);
+      
+      const response = await axiosInstance.post('/api/payment/initiate', {
+        plan: 'Event Join',
+        amount: 50,
+        eventId: event.id || event._id
+      });
+
+      if (response.data.success) {
+        // Success case
+        // alert("Redirecting to eSewa..."); 
+        postToEsewa(response.data.data);
+      } else {
+        toast.error(response.data.message || 'Payment initiation failed.');
+        alert('Server Error: ' + (response.data.message || 'Payment initiation failed.'));
+        setIsPaymentLoading(false);
+      }
+    } catch (error) {
+      console.error('Payment Error:', error);
+      const errMsg = error.response?.data?.message || error.message || 'Failed to initiate payment.';
+      toast.error(errMsg);
+      alert('Connection Error: ' + errMsg);
+      setIsPaymentLoading(false);
+    }
+  };
+
+  const handleJoinClick = () => {
+    if (!event) return;
+    if (event.hasRSVPd) {
+        // If already joined, just execute (cancel RSVP)
+        executeRSVP();
+    } else {
+        // If joining, show payment dialog
+        setIsPaymentDialogOpen(true);
+    }
   };
 
   const handleMessageHost = async () => {
@@ -227,7 +275,7 @@ export const EventDetailModal = ({ isOpen, onClose, eventId }) => {
                 <Button 
                     variant={event.hasRSVPd ? "secondary" : "primary"}
                     size="lg"
-                    onClick={handleRSVP}
+                    onClick={handleJoinClick}
                     disabled={rsvpMutation.isPending}
                     className={`flex-1 shadow-lg ${!event.hasRSVPd ? 'bg-emerald-600 hover:bg-emerald-700' : ''}`}
                 >
@@ -241,6 +289,77 @@ export const EventDetailModal = ({ isOpen, onClose, eventId }) => {
                 )}
             </div>
         )}
+        </div>
+      
+      <div className={`fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity duration-200 ${isPaymentDialogOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+        <div className={`bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto p-6 transform transition-all duration-200 ${isPaymentDialogOpen ? 'scale-100' : 'scale-95'}`}>
+          {/* Header */}
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-xl font-bold text-gray-900">Join Event</h3>
+            <button 
+                onClick={() => setIsPaymentDialogOpen(false)} 
+                className="p-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                disabled={isPaymentLoading}
+            >
+              <X className="w-5 h-5"/>
+            </button>
+          </div>
+
+          {/* Body */}
+          <div className="space-y-6 mb-8">
+            <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-6 flex flex-col items-center gap-2 text-center">
+              <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mb-2">
+                <span className="text-2xl font-bold text-emerald-600">Rs</span>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-emerald-800 uppercase tracking-wide">Participation Fee</p>
+                <p className="text-4xl font-bold text-emerald-900 mt-1">50</p>
+              </div>
+            </div>
+
+            <div className="text-center px-4">
+                <p className="text-gray-600">
+                    You are about to join <span className="font-bold text-gray-900 break-words">"{event?.title}"</span>.
+                </p>
+                <p className="text-gray-500 text-sm mt-2">
+                    Proceed to payment to confirm your spot.
+                </p>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="flex flex-col gap-3">
+            <Button 
+                variant="primary" 
+                size="lg"
+                className="w-full bg-[#60bb46] hover:bg-[#4da934] text-white shadow-lg shadow-green-100 border-none font-bold text-lg h-12" 
+                onClick={handlePayment} 
+                disabled={isPaymentLoading}
+            >
+              {isPaymentLoading ? (
+                  <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Processing...
+                  </div>
+              ) : (
+                  'Pay with eSewa'
+              )}
+            </Button>
+            
+            {/* Debug/Status Message */}
+            <p className="text-xs text-center text-gray-400 min-h-[1.5em]">
+                {isPaymentLoading ? "Initiating secure payment..." : "Click to proceed to eSewa gateway"}
+            </p>
+            <Button 
+                variant="ghost" 
+                onClick={() => setIsPaymentDialogOpen(false)}
+                disabled={isPaymentLoading}
+                className="text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

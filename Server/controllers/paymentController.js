@@ -3,6 +3,7 @@ const crypto = require('crypto'); // Use native crypto
 const { v4: uuidv4 } = require('uuid');
 const Payment = require('../models/payment.model');
 const User = require('../models/user.model');
+const Event = require('../models/Event');
 // const fetch = require('node-fetch'); // Ensure this is available or use native fetch in Node 18+ (but user is on Node 20, so native fetch might be there, but they installed node-fetch v2)
 const fetch = require('node-fetch');
 
@@ -10,7 +11,7 @@ const fetch = require('node-fetch');
 exports.initiateEsewaPayment = async (req, res) => {
   try {
     console.log("Initiating Payment...");
-    const { plan, amount } = req.body;
+    let { plan, amount, eventId } = req.body;
     console.log("Request Body:", req.body);
     
     // Check user
@@ -20,6 +21,12 @@ exports.initiateEsewaPayment = async (req, res) => {
     }
     const userId = req.user._id;
 
+    // Enforce logic: If it's an event payment, amount MUST be 50.
+    if (eventId) {
+        amount = 50;
+        plan = plan || 'Event Join'; // Set default plan name if missing
+    }
+
     if (!plan || !amount) {
       return res.status(400).json({ success: false, message: 'Plan and amount are required.' });
     }
@@ -28,7 +35,7 @@ exports.initiateEsewaPayment = async (req, res) => {
     const transaction_uuid = `${uuidv4()}-${Date.now()}`;
     console.log("Generated UUID:", transaction_uuid);
 
-    const newPayment = new Payment({ userId, plan, amount, transaction_uuid, status: 'pending' });
+    const newPayment = new Payment({ userId, plan, amount, transaction_uuid, status: 'pending', eventId });
     await newPayment.save();
     console.log("Payment saved to DB");
 
@@ -111,27 +118,47 @@ exports.verifyEsewaPayment = async (req, res) => {
         if (verificationResponse.status.toUpperCase() === 'COMPLETE') {
             const payment = await Payment.findOne({ transaction_uuid: verificationResponse.transaction_uuid });
             if (!payment) return res.redirect(`${failureRedirectUrl}&message=${encodeURIComponent('Payment record not found.')}`);
+
             if (payment.status === 'success') return res.redirect(successRedirectUrl);
 
             payment.status = 'success';
             await payment.save();
 
-            // --- SET EXPIRATION DATE ON SUCCESS ---
-            const expirationDate = new Date();
-            expirationDate.setMonth(expirationDate.getMonth() + 1); // Subscription lasts for 1 month
+            // --- DIFFERENTIATE BASED ON PAYMENT TYPE ---
+            if (payment.eventId) {
+                // *** EVENT PAYMENT: ADD USER TO EVENT PARTICIPANTS (RSVP) ***
+                const event = await Event.findById(payment.eventId);
+                if (!event) return res.redirect(`${failureRedirectUrl}&message=${encodeURIComponent('Event not found.')}`);
 
-            const updatedUser = await User.findByIdAndUpdate(
-                payment.userId, 
-                { 
-                    subscription: payment.plan,
-                    subscriptionExpiresAt: expirationDate
-                },
-                { new: true }
-            );
+                // Check if already participant to avoid duplicates (though minimal harm)
+                if (!event.participants.includes(payment.userId)) {
+                    event.participants.push(payment.userId);
+                    await event.save();
+                }
+                
+                // Redirect back to the group page to show success state
+                // We need to fetch the group ID from the event to construct the URL
+                const groupPageUrl = `${ensureProtocol(frontendBase)}/community/groups/${event.group}?payment=success&eventId=${event._id}`;
+                return res.redirect(groupPageUrl);
 
-            if (!updatedUser) return res.redirect(`${failureRedirectUrl}&message=${encodeURIComponent('Account update failed.')}`);
-            
-            return res.redirect(successRedirectUrl);
+            } else {
+                // *** SUBSCRIPTION PAYMENT: UPDATE USER SUBSCRIPTION ***
+                const expirationDate = new Date();
+                expirationDate.setMonth(expirationDate.getMonth() + 1); // Subscription lasts for 1 month
+
+                const updatedUser = await User.findByIdAndUpdate(
+                    payment.userId, 
+                    { 
+                        subscription: payment.plan,
+                        subscriptionExpiresAt: expirationDate
+                    },
+                    { new: true }
+                );
+                
+                if (!updatedUser) return res.redirect(`${failureRedirectUrl}&message=${encodeURIComponent('Account update failed.')}`);
+                
+                return res.redirect(successRedirectUrl);
+            }
         } else {
             await Payment.findOneAndUpdate({ transaction_uuid: decodedData.transaction_uuid }, { status: 'failure' });
             return res.redirect(`${failureRedirectUrl}&message=${encodeURIComponent(`Transaction status is ${verificationResponse.status}.`)}`);

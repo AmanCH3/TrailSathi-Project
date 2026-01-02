@@ -48,7 +48,7 @@ const Chatbot = () => {
           <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4 text-white">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold">TrailMate Helper</h3>
+                <h3 className="text-lg font-semibold">TrailSathi Helper</h3>
                 <p className="text-blue-100 text-sm">Ask me about trails & groups</p>
               </div>
               <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
