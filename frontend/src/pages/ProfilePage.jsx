@@ -8,7 +8,9 @@ import Footer from '../layouts/Footer';
 import { ProfileInfo } from '../components/profile/ProfileInfo';
 import { HikingStats } from '../components/profile/HikingStats';
 import { EditProfileDialog } from '../components/profile/EditProfileDialog';
-import { UserGroupsTab } from '../components/profile/UseGroupTab';
+import { UserEventsTab } from '../components/profile/UserEventsTab';
+import { Calendar } from 'lucide-react'; // Import Calendar icon
+// import { UserGroupsTab } from '../components/profile/UseGroupTab'; // Removed Groups Tab
 import { MyTrailsTab } from '../components/profile/MyTrailsTab'; 
 import { AchievementsTab } from '../components/profile/AchievementsTab'; 
 
@@ -85,7 +87,7 @@ export default function ProfilePage() {
               <TabButton id="profile" label="Profile" icon={User} isActive={activeTab === 'profile'} onClick={setActiveTab} />
               <TabButton id="trails" label="My Trails" icon={Mountain} isActive={activeTab === 'trails'} onClick={setActiveTab} />
               <TabButton id="stats" label="Hiking Stats" icon={TrendingUp} isActive={activeTab === 'stats'} onClick={setActiveTab} />
-              <TabButton id="groups" label="Groups" icon={Users} isActive={activeTab === 'groups'} onClick={setActiveTab} />
+              <TabButton id="events" label="Joined Events" icon={Calendar} isActive={activeTab === 'events'} onClick={setActiveTab} />
               <TabButton id="achievements" label="Achievements" icon={Trophy} isActive={activeTab === 'achievements'} onClick={setActiveTab} />
             </div>
 
@@ -124,8 +126,8 @@ export default function ProfilePage() {
               {/* --- Hiking Stats Tab --- */}
               {activeTab === 'stats' && <HikingStats stats={user.stats} completedTrails={user.completedTrails} />}
 
-              {/* --- Groups Tab --- */}
-              {activeTab === 'groups' && <UserGroupsTab groups={user.groups} user={user} />}
+              {/* --- Joined Events Tab --- */}
+              {activeTab === 'events' && <UserEventsTab events={user.joinedEvents || []} user={user} />}
               
               {/* --- Achievements Tab --- */}
               {activeTab === 'achievements' && <AchievementsTab user={user} />}
