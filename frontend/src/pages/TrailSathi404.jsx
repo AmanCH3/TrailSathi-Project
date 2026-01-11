@@ -1,95 +1,73 @@
 import React from 'react';
 import { Home, MapPin, Users, MessageCircle, Mountain, TreePine, Compass } from 'lucide-react';
 import { Link, Links } from 'react-router-dom';
+import Lottie from 'lottie-react';
+import notFoundAnimation from '../assets/404.json';
 
 const TrailSathi404 = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-emerald-50 flex items-center justify-center p-4">
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-10 left-10 text-green-200 opacity-30">
-          <TreePine size={48} />
-        </div>
-        <div className="absolute top-20 right-20 text-blue-200 opacity-30">
-          <Mountain size={56} />
-        </div>
-        <div className="absolute bottom-20 left-20 text-emerald-200 opacity-30">
-          <Compass size={40} />
-        </div>
-        <div className="absolute bottom-10 right-10 text-green-200 opacity-30">
-          <TreePine size={44} />
-        </div>
+    <div className="min-h-screen bg-[#FAF9F6] flex flex-col items-center justify-center p-4 relative overflow-hidden select-none">
+      
+      {/* Decorative Birds (Subtle) */}
+      <div className="absolute top-1/4 left-1/4 opacity-20 transform -translate-x-12 -translate-y-12">
+        <svg width="60" height="40" viewBox="0 0 60 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+           <path d="M10 20 Q 20 5, 30 20 T 50 20" stroke="#2F3E46" strokeWidth="2" fill="none"/>
+        </svg>
+      </div>
+      <div className="absolute top-1/3 right-1/4 opacity-15 transform translate-x-12">
+        <svg width="40" height="30" viewBox="0 0 40 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+           <path d="M5 15 Q 15 5, 25 15 T 35 15" stroke="#2F3E46" strokeWidth="2" fill="none"/>
+        </svg>
       </div>
 
-      <div className="relative z-10 text-center max-w-2xl mx-auto">
-        {/* Main illustration */}
-        <div className="mb-8 relative">
-          <div className="inline-flex items-center justify-center w-32 h-32 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full shadow-2xl mb-4">
-            <Mountain className="text-white" size={48} />
-          </div>
-          <div className="absolute -top-2 -right-2 w-8 h-8 bg-orange-400 rounded-full flex items-center justify-center shadow-lg">
-            <span className="text-white font-bold text-sm">!</span>
-          </div>
-        </div>
-
-        {/* Error message */}
-        <div className="mb-8">
-          <h1 className="text-6xl font-bold text-gray-800 mb-4">404</h1>
-          <h2 className="text-3xl font-semibold text-gray-700 mb-4">Trail Not Found</h2>
-          <p className="text-gray-600 text-lg leading-relaxed mb-6">
-            Looks like you've wandered off the beaten path! The trail you're looking for doesn't exist, 
-            but don't worry – every great hiker knows that getting lost sometimes leads to the best discoveries.
-          </p>
-        </div>
-
-        {/* Action buttons */}
-        <div className="space-y-4 mb-8">
-            <Link to = "/">
-          <button className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-lg shadow-lg hover:from-green-700 hover:to-emerald-700 transform hover:scale-105 transition-all duration-200">
-            <Home className="mr-2" size={20} />
-            Back to Base Camp
-          </button>
-            </Link>
+      <div className="text-center z-10 w-full max-w-5xl mx-auto space-y-6">
+        
+        {/* MASKED 404 TEXT with LOTTIE */}
+        <div className="flex items-center justify-center gap-2 sm:gap-4 md:gap-6">
+          <span 
+            className="text-[10rem] sm:text-[16rem] md:text-[20rem] font-bold leading-none tracking-tighter text-transparent bg-clip-text bg-center bg-cover select-none drop-shadow-sm"
+            style={{
+              backgroundImage: `url('https://images.unsplash.com/photo-1448375240586-dfd8d395ea6c?q=80&w=2940&auto=format&fit=crop')`,
+              fontFamily: 'Inter, system-ui, sans-serif'
+            }}
+          >
+            4
+          </span>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to = "/trails">
-            <button className="inline-flex items-center justify-center px-6 py-3 bg-white text-green-600 font-medium rounded-lg shadow-md hover:shadow-lg border-2 border-green-600 hover:bg-green-50 transition-all duration-200">
-              <MapPin className="mr-2" size={18} />
-              Find Trails
-            </button>
-            </Link>
-            
-             <Link to = "/groups">
-            <button className="inline-flex items-center justify-center px-6 py-3 bg-white text-blue-600 font-medium rounded-lg shadow-md hover:shadow-lg border-2 border-blue-600 hover:bg-blue-50 transition-all duration-200">
-              <Users className="mr-2" size={18} />
-              Join Groups
-            </button>
-             </Link>
-            
-         
+          <div className="w-[8rem] h-[8rem] sm:w-[14rem] sm:h-[14rem] md:w-[18rem] md:h-[18rem] flex items-center justify-center">
+             <Lottie animationData={notFoundAnimation} loop={true} className="w-full h-full" />
           </div>
+
+          <span 
+            className="text-[10rem] sm:text-[16rem] md:text-[20rem] font-bold leading-none tracking-tighter text-transparent bg-clip-text bg-center bg-cover select-none drop-shadow-sm"
+            style={{
+              backgroundImage: `url('https://images.unsplash.com/photo-1448375240586-dfd8d395ea6c?q=80&w=2940&auto=format&fit=crop')`,
+              fontFamily: 'Inter, system-ui, sans-serif'
+            }}
+          >
+            4
+          </span>
+        </div>
+        
+        <div className="space-y-8 relative -top-8 sm:-top-16">
+            <h2 className="text-[#4A5D5E] text-xl sm:text-2xl font-light tracking-wide">
+            Looks like you lost your way home
+            </h2>
+
+            <Link to="/">
+                <button className="px-10 py-4 bg-[#6A4C6F] hover:bg-[#573d5c] text-white text-sm font-bold rounded-full tracking-widest uppercase transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                    Take Me Back
+                </button>
+            </Link>
         </div>
 
-        {/* Inspirational quote */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-green-100">
-          <blockquote className="text-gray-700 italic text-lg mb-2">
-            "Not all those who wander are lost."
-          </blockquote>
-          <cite className="text-green-600 font-medium">– J.R.R. Tolkien</cite>
-        </div>
-
-        {/* Footer */}
-        <div className="mt-8 text-gray-500 text-sm">
-          <p>Need help finding your way? Contact our trail guides at support@TrailSathi.com</p>
-        </div>
       </div>
+      
+       {/* Attribution tiny */}
+       <div className="absolute bottom-4 text-[10px] text-gray-300">
+        Photo by Unsplash
+       </div>
 
-      {/* Floating elements animation */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-green-400 rounded-full opacity-60 animate-pulse"></div>
-        <div className="absolute top-1/3 right-1/3 w-3 h-3 bg-blue-400 rounded-full opacity-40 animate-pulse delay-1000"></div>
-        <div className="absolute bottom-1/4 left-1/3 w-2 h-2 bg-emerald-400 rounded-full opacity-50 animate-pulse delay-500"></div>
-      </div>
     </div>
   );
 };

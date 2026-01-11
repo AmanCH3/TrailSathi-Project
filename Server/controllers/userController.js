@@ -44,6 +44,8 @@ exports.getMe = (req, res, next) => {
   next();
 };
 
+const EventAttendance = require('./../models/EventAttendance');
+
 exports.getUser = catchAsync(async (req, res, next) => {
   // 1. Find the User
   const user = await User.findById(req.params.id)
@@ -62,16 +64,42 @@ exports.getUser = catchAsync(async (req, res, next) => {
     status: 'planned' 
   }).populate('trail');
 
-  // 3. Convert User Document to Object and Inject SoloHikes as joinedTrails
+  // 3. Find Events the user is attending
+  const eventAttendances = await EventAttendance.find({
+    user: req.params.id,
+    status: 'going'
+  }).populate({
+    path: 'event',
+    populate: [
+      { path: 'group', select: 'name coverImage' },
+      { path: 'host', select: 'name profileImage' } // Populate host info
+    ]
+  });
+
+  // 4. Convert User Document to Object and Inject Data
   const userObj = user.toObject();
   
   userObj.joinedTrails = soloHikes.map(hike => ({
       trail: hike.trail,
       scheduledDate: hike.startDateTime,
-      _id: hike._id, // CHANGED from soloHikeId to _id for frontend compatibility
+      _id: hike._id, 
       soloHikeId: hike._id, 
       status: hike.status
   }));
+
+  userObj.joinedEvents = eventAttendances.map(attendance => ({
+    _id: attendance.event?._id,
+    title: attendance.event?.title,
+    description: attendance.event?.description,
+    startDateTime: attendance.event?.startDateTime,
+    meetLocation: attendance.event?.meetLocation,
+    group: attendance.event?.group,
+    host: attendance.event?.host,
+    rsvpCount: attendance.event?.participantsCount,
+    capacity: attendance.event?.maxParticipants,
+    attendanceId: attendance._id,
+    rsvpStatus: attendance.status
+  })).filter(e => e._id); // Filter out nulls if event was deleted
 
   res.status(200).json({
     success: true,
